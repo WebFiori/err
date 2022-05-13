@@ -1,0 +1,21 @@
+{
+    "name": "webfiori/err",
+    "description": "A library for handling PHP errors and exceptions in a better way.",
+    "authors": [
+        {
+            "name": "Ibrahim BinAlshikh",
+            "email": "ibrahim@webfiori.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.0"
+    },
+    "keywords": [
+        "php",
+        "error",
+        "errors",
+        "exception",
+        "error handler"
+    ],
+    "license": "MIT"
+}

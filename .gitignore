@@ -1,0 +1,4 @@
+/.php_cs.cache
+/php-cs-fixer-v2.phar
+/.phpunit.result.cache
+nbproject

@@ -30,7 +30,7 @@ class ErrorHandlerException extends Exception {
                 $temp['line'] = $line;
                 $this->debugTrace[] = new TraceEntry($temp);
             }
-            $line = $trace[$x]['line'];
+            $line = isset($trace[$x]['line']) ? $trace[$x]['line'] : 'X';
         }
         $this->debugTrace[] = new TraceEntry([
             'file' => $file,

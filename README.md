@@ -6,9 +6,6 @@ A library for handling PHP errors and exceptions in a better way.
   <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php81.yml">
     <img src="https://github.com/WebFiori/err/workflows/Build%20PHP%208.1/badge.svg?branch=main">
   </a>
-  <a href="https://codecov.io/gh/WebFiori/err">
-    <img src="https://codecov.io/gh/WebFiori/err/branch/main/graph/badge.svg" />
-  </a>
   <a href="https://sonarcloud.io/dashboard?id=WebFiori_err">
       <img src="https://sonarcloud.io/api/project_badges/measure?project=WebFiori_err&metric=alert_status" />
   </a>

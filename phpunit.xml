@@ -12,7 +12,7 @@
     </logging>
     <testsuites>
         <testsuite name="Tests">
-            <directory>./tests/webfiori/framework/test/error</directory>
+            <directory>./tests/webfiori/test/error</directory>
         </testsuite>
     </testsuites>
 </phpunit>

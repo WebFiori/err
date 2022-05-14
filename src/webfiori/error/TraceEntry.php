@@ -47,7 +47,8 @@ class TraceEntry {
      * the method will return  the string 'X'.
      */
     public static function extractClassName(string $filePath) : string {
-        $expl = explode(DIRECTORY_SEPARATOR, $filePath);
+        $fixed = str_replace('\\', DIRECTORY_SEPARATOR, str_replace('/', DIRECTORY_SEPARATOR, $filePath));
+        $expl = explode(DIRECTORY_SEPARATOR, $fixed);
 
         if (count($expl) <= 1) {
             return 'X';

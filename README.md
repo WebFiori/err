@@ -84,7 +84,7 @@ class DefaultExceptionsHandler extends AbstractExceptionHandler {
 After implementing the handler, the developer must set it as exceptions handler. To do that, simply the developer have to use the method `Handler::setHandler()` in any place in his source code.
 
 ``` php
-Handler::setHandler(new AbstractExceptionHandler());
+Handler::setHandler(new DefaultExceptionsHandler());
 ```
 
 

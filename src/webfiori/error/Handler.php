@@ -8,6 +8,7 @@ use Throwable;
  * @author Ibrahim
  */
 class Handler {
+    private $handlersPool;
     /**
      * An array which holds one constant that is used to hold the meanings of different
      * PHP errors.
@@ -78,7 +79,7 @@ class Handler {
     ];
     /**
      * 
-     * @var AbstractExceptionHandler
+     * @var AbstractHandler
      */
     private $handler;
     /**
@@ -99,11 +100,36 @@ class Handler {
         });
         set_exception_handler(function (Throwable $ex)
         {
-            $class = Handler::get()->handler;
-            $class->setException($ex);
-            $class->handle();
+            foreach (Handler::get()->handlersPool as $h) {
+                
+                if ($h->isActive()) {
+                    $h->setException($ex);
+                    $h->handle();
+                    $h->setIsExecuted(true);
+                }
+            }
         });
-        $this->handler = new DefaultExceptionsHandler();
+        register_shutdown_function(function () {
+            $lastErr = error_get_last();
+            
+            if ($lastErr !== null) {
+                ob_clean();
+                $errClass = TraceEntry::extractClassName($lastErr['file']);
+                $errType = Handler::ERR_TYPES[$lastErr['type']];
+                $message = $errType['description'].': '.$lastErr['message'].' At '.$errClass.' Line '.$lastErr['line'];
+                $ex = new ErrorHandlerException($message, $lastErr['type'], $lastErr['file']);
+                foreach (Handler::get()->handlersPool as $h) {
+
+                    if ($h->isActive() && $h->isShutdownHandler() && !$h->isExecuted()) {
+                        $h->setException($ex);
+                        $h->handle();
+                        $h->setIsExecuted(true);
+                    }
+                }
+            }
+        });
+        $this->handlersPool = [];
+        $this->handlersPool[] = new DefaultHandler();
     }
     /**
      * Returns the instance which is used to handle exceptions and errors.
@@ -120,19 +146,68 @@ class Handler {
     /**
      * Sets a custom handler to handle exceptions.
      * 
-     * @param AbstractExceptionHandler $h A class that implements a custom
+     * @param AbstractHandler $h A class that implements a custom
      * handler.
      */
-    public static function setHandler(AbstractExceptionHandler $h) {
-        self::get()->handler = $h;
+    public static function registerHandler(AbstractHandler $h) {
+        if (!self::hasHandler($h->getName())) {
+            self::get()->handlersPool[] = $h;
+        }
     }
     /**
-     * Returns the handler instance which is used to handle exceptions.
+     * Remove a registered errors handler.
      * 
-     * @return AbstractExceptionHandler The handler instance which is used to
-     * handle exceptions.
+     * @param AbstractHandler $h A class that implements a custom
+     * handler.
      */
-    public function getHandler() : AbstractExceptionHandler {
-        return self::get()->handler;
+    public static function unregisterHandler(AbstractHandler $h) : bool {
+        $tempPool = [];
+        $removed = false;
+        foreach (self::get()->handlersPool as $handler) {
+            if ($handler->getName() != $h->getName()) {
+                $tempPool[] = $handler;
+                continue;
+            }
+            $removed = true;
+        }
+        self::get()->handlersPool = $tempPool;
+        return $removed;
+    }
+    /**
+     * Returns a handler given its name.
+     * 
+     * @param string $name The name of the handler.
+     * 
+     * @return AbstractHandler|null If a handler which has the given name is found,
+     * it will be returned as an object. Other than that, null is returned.
+     */
+    public static function &getHandler(string $name) {
+        $h = null;
+        $trimmed = trim($name);
+        
+        foreach (self::get()->handlersPool as $handler) {
+            if ($handler->getName() == $trimmed) {
+                $h = $handler;
+                break;
+            }
+        }
+        return $h;
+    }
+    /**
+     * Checks if a handler is registered or not given its name.
+     * 
+     * @param string $name The name of the handler.
+     * 
+     * @return bool If such handler is registered, the method will return true.
+     * Other than that, the method will return false.
+     */
+    public static function hasHandler(string $name) : bool {
+        $trimmed = trim($name);
+        foreach (self::get()->handlersPool as $handler) {
+            if ($handler->getName() == $trimmed) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -21,8 +21,8 @@ echo 'Root Directory: \''.$rootDir.'\'.'."\n";
 $classesPath = $rootDir.'src'.DS.'webfiori'.DS.'error'.DS;
 
 require_once $classesPath . 'ErrorHandlerException.php';
-require_once $classesPath . 'AbstractExceptionHandler.php';
-require_once $classesPath . 'DefaultExceptionsHandler.php';
+require_once $classesPath . 'AbstractHandler.php';
+require_once $classesPath . 'DefaultHandler.php';
 require_once $classesPath . 'TraceEntry.php';
 require_once $classesPath . 'Handler.php';
 

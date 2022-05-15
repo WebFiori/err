@@ -15,6 +15,7 @@ class DefaultHandler extends AbstractHandler {
      */
     public function __construct() {
         parent::__construct();
+        $this->setName('Default');
     }
     /**
      * Handles the exception.

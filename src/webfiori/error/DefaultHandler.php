@@ -9,7 +9,7 @@ namespace webfiori\error;
  *
  * @author Ibrahim
  */
-class DefaultExceptionsHandler extends AbstractExceptionHandler {
+class DefaultHandler extends AbstractHandler {
     /**
      * Creates new instance of the class.
      */
@@ -38,4 +38,13 @@ class DefaultExceptionsHandler extends AbstractExceptionHandler {
         }
         echo '</pre>';
     }
+
+    public function isActive(): bool {
+        return true;
+    }
+
+    public function isShutdownHandler(): bool {
+        return true;
+    }
+
 }

@@ -174,6 +174,26 @@ class Handler {
         return $removed;
     }
     /**
+     * Returns a handler given its name.
+     * 
+     * @param string $name The name of the handler.
+     * 
+     * @return AbstractHandler|null If a handler which has the given name is found,
+     * it will be returned as an object. Other than that, null is returned.
+     */
+    public static function &getHandler(string $name) {
+        $h = null;
+        $trimmed = trim($name);
+        
+        foreach (self::get()->handlersPool as $handler) {
+            if ($handler->getName() == $trimmed) {
+                $h = $handler;
+                break;
+            }
+        }
+        return $h;
+    }
+    /**
      * Checks if a handler is registered or not given its name.
      * 
      * @param string $name The name of the handler.
@@ -189,14 +209,5 @@ class Handler {
             }
         }
         return false;
-    }
-    /**
-     * Returns the handler instance which is used to handle exceptions.
-     * 
-     * @return AbstractHandler The handler instance which is used to
-     * handle exceptions.
-     */
-    public function getHandler() : AbstractHandler {
-        return self::get()->handler;
     }
 }

@@ -66,6 +66,14 @@ abstract class AbstractHandler {
         return TraceEntry::extractClassName($this->getException()->getFile());
     }
     /**
+     * Returns exception error code.
+     * 
+     * @return string Error code of the exception.
+     */
+    public function getCode() : string {
+        return $this->getException()->getCode().'';
+    }
+    /**
      * Returns an object that represents the exception which was thrown.
      * 
      * @return Throwable An object that represents the exception which was thrown.

@@ -36,7 +36,20 @@ class TraceEntry {
      * @return string
      */
     public function __toString() {
-        return 'At class '.$this->getClass().' line '.$this->getLine();
+        $line = $this->getLine();
+        $class = $this->getClass();
+        
+        if ($class == 'X') {
+            $retVal = 'NO CLASS';
+        } else {
+            $retVal = 'At class '.$this->getClass();
+        }
+        
+        if ($line != 'X') {
+            $retVal .= ' line '.$line;
+        }
+        
+        return $retVal;
     }
     /**
      * Extract PHP's class name based on the file name of the class/

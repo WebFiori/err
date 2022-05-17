@@ -25,12 +25,17 @@ class ErrorHandlerException extends Exception {
         $line = null;
 
         for ($x = 0 ; $x < count($trace) ; $x++) {
-            if ($x != 0 && $line !== null) {
+            if ($x == 1) {
+                $line = isset($trace[$x]['line']) ? $trace[$x]['line'] : 'X';
+                continue;
+            }
+            if ($x > 1) {
                 $temp = $trace[$x];
                 $temp['line'] = $line;
                 $this->debugTrace[] = new TraceEntry($temp);
+                $line = isset($trace[$x]['line']) ? $trace[$x]['line'] : 'X';
             }
-            $line = isset($trace[$x]['line']) ? $trace[$x]['line'] : 'X';
+            
         }
         $this->debugTrace[] = new TraceEntry([
             'file' => $file,

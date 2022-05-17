@@ -37,7 +37,13 @@ class TraceEntry {
      */
     public function __toString() {
         $line = $this->getLine();
-        $retVal = 'At class '.$this->getClass();
+        $class = $this->getClass();
+        
+        if ($class == 'X') {
+            $retVal = 'NO CLASS';
+        } else {
+            $retVal = 'At class '.$this->getClass();
+        }
         
         if ($line != 'X') {
             $retVal .= ' line '.$line;

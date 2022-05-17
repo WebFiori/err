@@ -95,7 +95,7 @@ class Handler {
         {
             $errClass = TraceEntry::extractClassName($errfile);
             $errType = Handler::ERR_TYPES[$errno];
-            $message = $errType['description'].': '.$errstr.' at '.$errClass.' Line '.$errline;
+            $message = 'An exception caused by an error. '.$errType['description'].': '.$errstr.' at '.$errClass.' Line '.$errline;
             throw new ErrorHandlerException($message, $errno, $errfile);
         });
         set_exception_handler(function (Throwable $ex)
@@ -113,7 +113,9 @@ class Handler {
             $lastErr = error_get_last();
             
             if ($lastErr !== null) {
-                ob_clean();
+                if (ob_get_length()) {
+                    ob_clean();
+                }
                 $errClass = TraceEntry::extractClassName($lastErr['file']);
                 $errType = Handler::ERR_TYPES[$lastErr['type']];
                 $message = $errType['description'].': '.$lastErr['message'].' At '.$errClass.' Line '.$lastErr['line'];

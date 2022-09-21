@@ -141,9 +141,22 @@ abstract class AbstractHandler {
             $this->traceArr = $ex->getDebugTrace();
         } else {
             $trace = $ex->getTrace();
-
+            $currentLine = isset($trace[0]['line']) ? $trace[0]['line'] : 'X';
+            $currentFile = isset($trace[0]['file']) ? $trace[0]['file'] : 'X';
+            $nextLine = '';
+            $nextFile = '';
+            $idx = 0;
             foreach ($trace as $traceEntry) {
-                $this->traceArr[] = new TraceEntry($traceEntry);
+                if ($idx != 0) {
+                    $nextFile = isset($traceEntry['file']) ? $traceEntry['file'] : 'X';
+                    $nextLine = isset($traceEntry['line']) ? $traceEntry['line'] : 'X';
+                    $traceEntry['file'] = $currentFile;
+                    $traceEntry['line'] = $currentLine;
+                    $this->traceArr[] = new TraceEntry($traceEntry);
+                    $currentFile = $nextFile;
+                    $currentLine = $nextLine;
+                }
+                $idx++;
             }
         }
     }

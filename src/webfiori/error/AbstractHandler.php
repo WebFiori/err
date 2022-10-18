@@ -12,6 +12,7 @@ abstract class AbstractHandler {
     private $traceArr;
     private $name;
     private $isCalled;
+    private $isExecuting;
     /**
      * Creates new instance of the class.
      */
@@ -19,6 +20,7 @@ abstract class AbstractHandler {
         $this->traceArr = [];
         $this->name = 'New Handler';
         $this->isCalled = false;
+        $this->isExecuting = false;
     }
     /**
      * Sets the handler as executed.
@@ -133,6 +135,29 @@ abstract class AbstractHandler {
     public function setException(Throwable $ex) {
         $this->exception = $ex;
         $this->setTrace();
+    }
+    /**
+     * Sets the value that tells if the handler is begin executed or not.
+     * 
+     * This method is used internally by the library to set status of the
+     * handler.
+     * 
+     * @param bool $isExec True to set the handler as begin executed. False
+     * to not.
+     */
+    public function setIsExecuting(bool $isExec) {
+        $this->isExecuting = $isExec;
+    }
+    /**
+     * Check if the handler is in execution stage or not.
+     * 
+     * This method is used to indicate if execution
+     * scope is inside the method AbstractHandler::handle() or not.
+     * 
+     * @return bool True if the handler is executing. False if not.
+     */
+    public function isExecuting() : bool {
+        return $this->isExecuting;
     }
     private function setTrace() {
         $ex = $this->getException();

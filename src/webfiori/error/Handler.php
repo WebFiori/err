@@ -81,7 +81,12 @@ class Handler {
      * 
      * @var AbstractHandler
      */
-    private $handler;
+    private $isErrOccured;
+    /**
+     * 
+     * @var Throwable|null
+     */
+    private $lastException;
     /**
      * 
      * @var Handler
@@ -91,6 +96,7 @@ class Handler {
         ini_set('display_startup_errors', 1);
         ini_set('display_errors', 1);
         error_reporting(-1);
+        $this->isErrOccured = false;
         set_error_handler(function (int $errno, string $errstr, string $errfile, int $errline)
         {
             $errClass = TraceEntry::extractClassName($errfile);
@@ -100,30 +106,27 @@ class Handler {
         });
         set_exception_handler(function (Throwable $ex)
         {
+            $this->lastException = $ex;
             foreach (Handler::get()->handlersPool as $h) {
                 
                 if ($h->isActive()) {
                     $h->setException($ex);
+                    $h->setIsExecuting(true);
                     $h->handle();
+                    $h->setIsExecuting(false);
                     $h->setIsExecuted(true);
                 }
             }
         });
         register_shutdown_function(function () {
-            $lastErr = error_get_last();
-            
-            if ($lastErr !== null) {
+            if ($this->lastException !== null) {
                 if (ob_get_length()) {
                     ob_clean();
                 }
-                $errClass = TraceEntry::extractClassName($lastErr['file']);
-                $errType = Handler::ERR_TYPES[$lastErr['type']];
-                $message = $errType['description'].': '.$lastErr['message'].' At '.$errClass.' Line '.$lastErr['line'];
-                $ex = new ErrorHandlerException($message, $lastErr['type'], $lastErr['file']);
                 foreach (Handler::get()->handlersPool as $h) {
 
-                    if ($h->isActive() && $h->isShutdownHandler() && !$h->isExecuted()) {
-                        $h->setException($ex);
+                    if ($h->isActive() && $h->isShutdownHandler() && !$h->isExecuted() && !$h->isExecuting()) {
+                        $h->setException($this->lastException);
                         $h->handle();
                         $h->setIsExecuted(true);
                     }

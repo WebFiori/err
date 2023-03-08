@@ -27,7 +27,7 @@ A library for handling PHP errors and exceptions in a better way.
 |<a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php82.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%208.2/badge.svg?branch=main"></a><br>(dev)|
 
 ## Installation
-The library can be included in your project by including following entry in your `require` section of your `composer.json`: `"webfiori/err":"1.0.0"`.
+The library can be included in your project by including following entry in your `require` section of your `composer.json`: `"webfiori/err":"*"`.
 
 ## Features
 * Conversion of all PHP errors to exceptions.

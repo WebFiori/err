@@ -3,7 +3,7 @@ namespace webfiori\error;
 
 use Throwable;
 /**
- * This class is used to implement custom exceptions handler.
+ * This class is used to implement custom exception handler.
  *
  * @author Ibrahim
  */
@@ -64,7 +64,7 @@ abstract class AbstractHandler {
      * @return string A string that represents the name of the class that an exception
      * was thrown at.
      */
-    public function getClass() {
+    public function getClass() : string {
         return TraceEntry::extractClassName($this->getException()->getFile());
     }
     /**
@@ -137,12 +137,12 @@ abstract class AbstractHandler {
         $this->setTrace();
     }
     /**
-     * Sets the value that tells if the handler is begin executed or not.
+     * Sets the value that tells if the handler is being executed or not.
      * 
      * This method is used internally by the library to set status of the
      * handler.
      * 
-     * @param bool $isExec True to set the handler as begin executed. False
+     * @param bool $isExec True to set the handler as being executed. False
      * to not.
      */
     public function setIsExecuting(bool $isExec) {
@@ -166,15 +166,13 @@ abstract class AbstractHandler {
             $this->traceArr = $ex->getDebugTrace();
         } else {
             $trace = $ex->getTrace();
-            $currentLine = isset($trace[0]['line']) ? $trace[0]['line'] : 'X';
-            $currentFile = isset($trace[0]['file']) ? $trace[0]['file'] : 'X';
-            $nextLine = '';
-            $nextFile = '';
+            $currentLine = $trace[0]['line'] ?? 'X';
+            $currentFile = $trace[0]['file'] ?? 'X';
             $idx = 0;
             foreach ($trace as $traceEntry) {
                 if ($idx != 0) {
-                    $nextFile = isset($traceEntry['file']) ? $traceEntry['file'] : 'X';
-                    $nextLine = isset($traceEntry['line']) ? $traceEntry['line'] : 'X';
+                    $nextFile = $traceEntry['file'] ?? 'X';
+                    $nextLine = $traceEntry['line'] ?? 'X';
                     $traceEntry['file'] = $currentFile;
                     $traceEntry['line'] = $currentLine;
                     $this->traceArr[] = new TraceEntry($traceEntry);

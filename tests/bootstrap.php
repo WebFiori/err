@@ -16,9 +16,9 @@ if (explode($DS, $rootDirTrimmed)[0] == 'home') {
     $rootDir = $rootDirTrimmed.$DS;
 }
 define('ROOT_DIR', $rootDir);
-define('DS', DIRECTORY_SEPARATOR);
+const DS = DIRECTORY_SEPARATOR;
 echo 'Root Directory: \''.$rootDir.'\'.'."\n";
-$classesPath = $rootDir.'src'.DS.'webfiori'.DS.'error'.DS;
+$classesPath = $rootDir.'webfiori'.DS.'error'.DS;
 
 require_once $classesPath . 'ErrorHandlerException.php';
 require_once $classesPath . 'AbstractHandler.php';

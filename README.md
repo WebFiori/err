@@ -15,32 +15,32 @@ A library for handling PHP errors and exceptions in a better way.
 </p>
 
 ## Supported PHP Versions
-| Build Status |
-|:-----------:|
-|<a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php70.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%207.0/badge.svg?branch=main"></a>|
-|<a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php71.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%207.1/badge.svg?branch=main"></a>|
-|<a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php72.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%207.2/badge.svg?branch=main"></a>|
-|<a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php73.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%207.3/badge.svg?branch=main"></a>|
-|<a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php74.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%207.4/badge.svg?branch=main"></a>|
-|<a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php80.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%208.0/badge.svg?branch=main"></a>|
-|<a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php81.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%208.1/badge.svg?branch=main"></a>|
-|<a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php82.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%208.2/badge.svg?branch=main"></a><br>(dev)|
+|                                                                                       Build Status                                                                                       |
+|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php70.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%207.0/badge.svg?branch=main"></a>  |
+| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php71.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%207.1/badge.svg?branch=main"></a>  |
+| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php72.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%207.2/badge.svg?branch=main"></a>  |
+| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php73.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%207.3/badge.svg?branch=main"></a>  |
+| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php74.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%207.4/badge.svg?branch=main"></a>  |
+| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php80.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%208.0/badge.svg?branch=main"></a>  |
+| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php81.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%208.1/badge.svg?branch=main"></a>  |
+| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php82.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%208.2/badge.svg?branch=main"></a>  |
 
 ## Installation
 The library can be included in your project by including following entry in your `require` section of your `composer.json`: `"webfiori/err":"*"`.
 
 ## Features
 * Conversion of all PHP errors to exceptions.
-* Ability to create a custom exceptions handler.
+* Ability to create a custom exceptions' handler.
 * Provides OOP abstraction for the function `set_exception_handler()`
 
 ## Usage
 
-The library has two main classes that the developer will work with. The first one is the class `Handler` and the second class is `AbstractExceptionHandler`. The first class is the core of the library. It is used to set custom exception handler. The second class is used to implement custom exceptions handler. Since the library will convert all PHP errors to exceptions, no need for the developer to have a custom errors handler.
+The library has two main classes that the developer will work with. The first one is the class `Handler` and the second class is `AbstractExceptionHandler`. The first class is the core of the library. It is used to set custom exception handler. The second class is used to implement custom exception handler. Since the library will convert all PHP errors to exceptions, no need for the developer to have a custom errors handler.
 
 ### Implementing a Custom Exceptions Handler
 
-First step in setting a custom exceptions handler is to implement one. Implementing a custom handler is strait forward procedure. Simply, the developer have to extends the class `AbstractExceptionHandler` and implement one abstract method of the class. The method `AbstractExceptionHandler::handle()` is used to handle the exception. The developer can have access to the properties of the thrown exception in order to handle it properly. The library comes with one default exceptions handler which can act as good example in how to implement a custom handler.
+First step in setting a custom exceptions handler is to implement one. Implementing a custom handler is strait forward procedure. Simply, the developer have to extend the class `AbstractExceptionHandler` and implement one abstract method of the class. The method `AbstractExceptionHandler::handle()` is used to handle the exception. The developer can have access to the properties of the thrown exception in order to handle it properly. The library comes with one default exceptions handler which can act as good example in how to implement a custom handler.
 
 ``` php
 <?php

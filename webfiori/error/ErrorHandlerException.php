@@ -3,7 +3,7 @@ namespace webfiori\error;
 
 use Exception;
 /**
- * This class is used to represents PHP errors which was converted to exceptions.
+ * This class is used to represent PHP errors which was converted to exceptions.
  *
  * @author Ibrahim
  */
@@ -16,7 +16,7 @@ class ErrorHandlerException extends Exception {
      * 
      * @param int $code The error code of the PHP error.
      * 
-     * @param string $file The path to the file at which the error happend.
+     * @param string $file The path to the file at which the error happened.
      */
     public function __construct(string $message = "", int $code = 0, string $file = '') {
         parent::__construct($message, $code);
@@ -26,16 +26,16 @@ class ErrorHandlerException extends Exception {
 
         for ($x = 0 ; $x < count($trace) ; $x++) {
             if ($x == 1) {
-                $line = isset($trace[$x]['line']) ? $trace[$x]['line'] : 'X';
+                $line = $trace[$x]['line'] ?? 'X';
                 continue;
             }
+
             if ($x > 1) {
                 $temp = $trace[$x];
                 $temp['line'] = $line;
                 $this->debugTrace[] = new TraceEntry($temp);
-                $line = isset($trace[$x]['line']) ? $trace[$x]['line'] : 'X';
+                $line = $trace[$x]['line'] ?? 'X';
             }
-            
         }
         $this->debugTrace[] = new TraceEntry([
             'file' => $file,
@@ -47,7 +47,7 @@ class ErrorHandlerException extends Exception {
      * 
      * @return array An array that holds objects of type 'TraceEntry'.
      */
-    public function getDebugTrace() {
+    public function getDebugTrace() : array {
         return $this->debugTrace;
     }
 }

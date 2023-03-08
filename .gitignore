@@ -2,3 +2,6 @@
 /php-cs-fixer-v2.phar
 /.phpunit.result.cache
 nbproject
+composer.lock
+vendor/*
+.idea/*

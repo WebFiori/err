@@ -5,7 +5,7 @@ namespace webfiori\error;
  * The default exceptions handler.
  * 
  * This simple handler will show the exception alongside the message ant trace
- * using the 'echo' command.
+ * using 'echo'.
  *
  * @author Ibrahim
  */
@@ -26,7 +26,7 @@ class DefaultHandler extends AbstractHandler {
         echo 'Exception message: '.$this->getMessage().'.<br>';
         echo 'Stack trace:<br>';
         $trace = $this->getTrace();
-        
+
         if (count($trace) == 0) {
             echo '&lt;Empty&gt;';
         } else {
@@ -40,12 +40,21 @@ class DefaultHandler extends AbstractHandler {
         echo '</pre>';
     }
 
+    /**
+     * Checks if the handler is active or not.
+     *
+     * @return bool The method will always return true.
+     */
     public function isActive(): bool {
         return true;
     }
 
+    /**
+     * Checks if the handler will be executed as a shutdown handler.
+     *
+     * @return bool The method will always return true.
+     */
     public function isShutdownHandler(): bool {
         return true;
     }
-
 }

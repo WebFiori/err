@@ -26,7 +26,7 @@ class DefaultHandler extends AbstractHandler {
         echo 'Exception message: '.$this->getMessage().'.<br>';
         echo 'Stack trace:<br>';
         $trace = $this->getTrace();
-        
+
         if (count($trace) == 0) {
             echo '&lt;Empty&gt;';
         } else {
@@ -57,5 +57,4 @@ class DefaultHandler extends AbstractHandler {
     public function isShutdownHandler(): bool {
         return true;
     }
-
 }

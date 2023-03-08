@@ -38,17 +38,17 @@ class TraceEntry {
     public function __toString() {
         $line = $this->getLine();
         $class = $this->getClass();
-        
+
         if ($class == 'X') {
             $retVal = 'NO CLASS';
         } else {
             $retVal = 'At class '.$this->getClass();
         }
-        
+
         if ($line != 'X') {
             $retVal .= ' line '.$line;
         }
-        
+
         return $retVal;
     }
     /**
@@ -69,7 +69,7 @@ class TraceEntry {
         $classFile = $expl[count($expl) - 1];
         $firstChar = $classFile[0];
 
-        return strtoupper($firstChar) .explode('.', substr($classFile, 1))[0];
+        return strtoupper($firstChar).explode('.', substr($classFile, 1))[0];
     }
     /**
      * Returns the name of the class that the entry represents.

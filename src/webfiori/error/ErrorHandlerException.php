@@ -29,13 +29,13 @@ class ErrorHandlerException extends Exception {
                 $line = $trace[$x]['line'] ?? 'X';
                 continue;
             }
+
             if ($x > 1) {
                 $temp = $trace[$x];
                 $temp['line'] = $line;
                 $this->debugTrace[] = new TraceEntry($temp);
                 $line = $trace[$x]['line'] ?? 'X';
             }
-            
         }
         $this->debugTrace[] = new TraceEntry([
             'file' => $file,

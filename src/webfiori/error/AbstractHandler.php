@@ -9,10 +9,10 @@ use Throwable;
  */
 abstract class AbstractHandler {
     private $exception;
-    private $traceArr;
-    private $name;
     private $isCalled;
     private $isExecuting;
+    private $name;
+    private $traceArr;
     /**
      * Creates new instance of the class.
      */
@@ -21,41 +21,6 @@ abstract class AbstractHandler {
         $this->name = 'New Handler';
         $this->isCalled = false;
         $this->isExecuting = false;
-    }
-    /**
-     * Sets the handler as executed.
-     * 
-     * This method is used to make sure that same handler won't get executed twice.
-     * 
-     * @param bool $bool True to set it as executed, false to not.
-     */
-    public function setIsExecuted(bool $bool) {
-        $this->isCalled = $bool;
-    }
-    /**
-     * Checks if the handler was executed once or not.
-     * 
-     * @return bool If the method returned true, then this means the handler
-     * was executed.
-     */
-    public function isExecuted() : bool {
-        return $this->isCalled;
-    }
-    /**
-     * Gives the handler a specific name.
-     * 
-     * @param string $name The custom name of the handler.
-     */
-    public function setName(string $name) {
-        $this->name = trim($name);
-    }
-    /**
-     * Returns the name of the handler.
-     * 
-     * @return string The name of the handler.
-     */
-    public function getName() : string {
-        return $this->name;
     }
     /**
      * Returns a string that represents the name of the class that an exception
@@ -100,6 +65,14 @@ abstract class AbstractHandler {
         return $this->getException()->getMessage();
     }
     /**
+     * Returns the name of the handler.
+     * 
+     * @return string The name of the handler.
+     */
+    public function getName() : string {
+        return $this->name;
+    }
+    /**
      * Returns an array that contains objects that represents stack trace of
      * the call.
      * 
@@ -122,6 +95,26 @@ abstract class AbstractHandler {
      */
     public abstract function isActive() : bool;
     /**
+     * Checks if the handler was executed once or not.
+     * 
+     * @return bool If the method returned true, then this means the handler
+     * was executed.
+     */
+    public function isExecuted() : bool {
+        return $this->isCalled;
+    }
+    /**
+     * Check if the handler is in execution stage or not.
+     * 
+     * This method is used to indicate if execution
+     * scope is inside the method AbstractHandler::handle() or not.
+     * 
+     * @return bool True if the handler is executing. False if not.
+     */
+    public function isExecuting() : bool {
+        return $this->isExecuting;
+    }
+    /**
      * Checks if the handler will be called in case of error after shutdown.
      */
     public abstract function isShutdownHandler() : bool;
@@ -137,6 +130,16 @@ abstract class AbstractHandler {
         $this->setTrace();
     }
     /**
+     * Sets the handler as executed.
+     * 
+     * This method is used to make sure that same handler won't get executed twice.
+     * 
+     * @param bool $bool True to set it as executed, false to not.
+     */
+    public function setIsExecuted(bool $bool) {
+        $this->isCalled = $bool;
+    }
+    /**
      * Sets the value that tells if the handler is being executed or not.
      * 
      * This method is used internally by the library to set status of the
@@ -149,19 +152,16 @@ abstract class AbstractHandler {
         $this->isExecuting = $isExec;
     }
     /**
-     * Check if the handler is in execution stage or not.
+     * Gives the handler a specific name.
      * 
-     * This method is used to indicate if execution
-     * scope is inside the method AbstractHandler::handle() or not.
-     * 
-     * @return bool True if the handler is executing. False if not.
+     * @param string $name The custom name of the handler.
      */
-    public function isExecuting() : bool {
-        return $this->isExecuting;
+    public function setName(string $name) {
+        $this->name = trim($name);
     }
     private function setTrace() {
         $ex = $this->getException();
-        
+
         if ($ex instanceof ErrorHandlerException) {
             $this->traceArr = $ex->getDebugTrace();
         } else {
@@ -169,6 +169,7 @@ abstract class AbstractHandler {
             $currentLine = $trace[0]['line'] ?? 'X';
             $currentFile = $trace[0]['file'] ?? 'X';
             $idx = 0;
+
             foreach ($trace as $traceEntry) {
                 if ($idx != 0) {
                     $nextFile = $traceEntry['file'] ?? 'X';

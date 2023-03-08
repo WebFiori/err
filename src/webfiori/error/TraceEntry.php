@@ -25,10 +25,10 @@ class TraceEntry {
      * </ul>
      */
     public function __construct(array $debugTraceEntry) {
-        $this->method = isset($debugTraceEntry['function']) ? $debugTraceEntry['function'] : '';
-        $this->file = isset($debugTraceEntry['file']) ? $debugTraceEntry['file'] : $this->method;
-        $this->line = isset($debugTraceEntry['line']) ? $debugTraceEntry['line'] : 'X';
-        $this->class = isset($debugTraceEntry['class']) ? $debugTraceEntry['class'] : self::extractClassName($this->file);
+        $this->method = $debugTraceEntry['function'] ?? '';
+        $this->file = $debugTraceEntry['file'] ?? $this->method;
+        $this->line = $debugTraceEntry['line'] ?? 'X';
+        $this->class = $debugTraceEntry['class'] ?? self::extractClassName($this->file);
     }
     /**
      * Converts the entry to a string.
@@ -69,7 +69,7 @@ class TraceEntry {
         $classFile = $expl[count($expl) - 1];
         $firstChar = $classFile[0];
 
-        return strtoupper($firstChar).''.explode('.', substr($classFile, 1))[0];
+        return strtoupper($firstChar) .explode('.', substr($classFile, 1))[0];
     }
     /**
      * Returns the name of the class that the entry represents.

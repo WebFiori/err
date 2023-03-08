@@ -3,7 +3,7 @@
 A library for handling PHP errors and exceptions in a better way.
 
 <p align="center">
-  <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php81.yml">
+  <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php82.yml">
     <img src="https://github.com/WebFiori/err/workflows/Build%20PHP%208.1/badge.svg?branch=main">
   </a>
   <a href="https://sonarcloud.io/dashboard?id=WebFiori_err">

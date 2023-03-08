@@ -97,15 +97,13 @@ class Handler {
         ini_set('display_errors', 1);
         error_reporting(-1);
         $this->isErrOccured = false;
-        set_error_handler(function (int $errno, string $errstr, string $errfile, int $errline)
-        {
-            $errClass = TraceEntry::extractClassName($errfile);
+        set_error_handler(function (int $errno, string $errString, string $errFile, int $errLine) {
+            $errClass = TraceEntry::extractClassName($errFile);
             $errType = Handler::ERR_TYPES[$errno];
-            $message = 'An exception caused by an error. '.$errType['description'].': '.$errstr.' at '.$errClass.' Line '.$errline;
-            throw new ErrorHandlerException($message, $errno, $errfile);
+            $message = 'An exception caused by an error. '.$errType['description'].': '.$errString.' at '.$errClass.' Line '.$errLine;
+            throw new ErrorHandlerException($message, $errno, $errFile);
         });
-        set_exception_handler(function (Throwable $ex)
-        {
+        set_exception_handler(function (Throwable $ex) {
             $this->lastException = $ex;
             foreach (Handler::get()->handlersPool as $h) {
                 
@@ -141,7 +139,7 @@ class Handler {
      * 
      * @return Handler An instance of the class.
      */
-    public static function get() {
+    public static function get() : Handler {
         if (self::$inst === null) {
             self::$inst = new Handler();
         }

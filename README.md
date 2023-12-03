@@ -3,8 +3,8 @@
 A library for handling PHP errors and exceptions in a better way.
 
 <p align="center">
-  <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php82.yml">
-    <img src="https://github.com/WebFiori/err/workflows/Build%20PHP%208.1/badge.svg?branch=main">
+  <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php83.yml">
+    <img src="https://github.com/WebFiori/err/actions/workflows/php83.yml/badge.svg?branch=main">
   </a>
   <a href="https://sonarcloud.io/dashboard?id=WebFiori_err">
       <img src="https://sonarcloud.io/api/project_badges/measure?project=WebFiori_err&metric=alert_status" />
@@ -17,14 +17,15 @@ A library for handling PHP errors and exceptions in a better way.
 ## Supported PHP Versions
 |                                                                                       Build Status                                                                                       |
 |:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php70.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%207.0/badge.svg?branch=main"></a>  |
-| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php71.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%207.1/badge.svg?branch=main"></a>  |
-| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php72.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%207.2/badge.svg?branch=main"></a>  |
-| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php73.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%207.3/badge.svg?branch=main"></a>  |
-| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php74.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%207.4/badge.svg?branch=main"></a>  |
-| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php80.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%208.0/badge.svg?branch=main"></a>  |
-| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php81.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%208.1/badge.svg?branch=main"></a>  |
-| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php82.yml"><img src="https://github.com/WebFiori/err/workflows/Build%20PHP%208.2/badge.svg?branch=main"></a>  |
+| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php70.yml"><img src="https://github.com/WebFiori/err/actions/workflows/php70.yml/badge.svg?branch=main"></a>  |
+| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php71.yml"><img src="https://github.com/WebFiori/err/actions/workflows/php71.yml/badge.svg?branch=main"></a>  |
+| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php72.yml"><img src="https://github.com/WebFiori/err/actions/workflows/php72.yml/badge.svg?branch=main"></a>  |
+| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php73.yml"><img src="https://github.com/WebFiori/err/actions/workflows/php73.yml/badge.svg?branch=main"></a>  |
+| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php74.yml"><img src="https://github.com/WebFiori/err/actions/workflows/php74.yml/badge.svg?branch=main"></a>  |
+| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php80.yml"><img src="https://github.com/WebFiori/err/actions/workflows/php80.yml/badge.svg?branch=main"></a>  |
+| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php81.yml"><img src="https://github.com/WebFiori/err/actions/workflows/php81.yml/badge.svg?branch=main"></a>  |
+| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php82.yml"><img src="https://github.com/WebFiori/err/actions/workflows/php82.yml/badge.svg?branch=main"></a>  |
+| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php83.yml"><img src="https://github.com/WebFiori/err/actions/workflows/php83.yml/badge.svg?branch=main"></a>  |
 
 ## Installation
 The library can be included in your project by including following entry in your `require` section of your `composer.json`: `"webfiori/err":"*"`.

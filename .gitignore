@@ -5,3 +5,5 @@ nbproject
 composer.lock
 vendor/*
 .idea/*
+php-cs-fixer.phar
+composer.phar

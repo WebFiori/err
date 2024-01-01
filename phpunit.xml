@@ -5,6 +5,8 @@
     <filter>
         <whitelist addUncoveredFilesFromWhitelist="true">
             <file>./src/webfiori/error/TraceEntry.php</file>
+            <file>./src/webfiori/error/Handler.php</file>
+            <file>./src/webfiori/error/AbstractHandler.php</file>
         </whitelist>
     </filter>
     <logging>

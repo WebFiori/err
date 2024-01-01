@@ -1,0 +1,23 @@
+<?php
+
+
+namespace webfiori\tests\error;
+
+use webfiori\error\AbstractHandler;
+
+class SampleHandler2 extends AbstractHandler {
+    public function __construct() {
+        parent::__construct();
+    }
+    public function handle() {
+        define('SampleHandler2', 'Yes');
+    }
+
+    public function isActive(): bool {
+        return true;
+    }
+
+    public function isShutdownHandler(): bool {
+        return true;
+    }
+}

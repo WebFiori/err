@@ -30,7 +30,7 @@ abstract class AbstractHandler {
      * was thrown at.
      */
     public function getClass() : string {
-        return TraceEntry::extractClassName($this->getException()->getFile());
+        return TraceEntry::extractClassName($this->getException() !== null ? $this->getException()->getFile() : 'X');
     }
     /**
      * Returns exception error code.
@@ -43,9 +43,9 @@ abstract class AbstractHandler {
     /**
      * Returns an object that represents the exception which was thrown.
      * 
-     * @return Throwable An object that represents the exception which was thrown.
+     * @return Throwable|null An object that represents the exception which was thrown.
      */
-    public function getException() : Throwable {
+    public function getException() {
         return $this->exception;
     }
     /**
@@ -54,7 +54,7 @@ abstract class AbstractHandler {
      * @return string The number of line at which the exception was thrown at.
      */
     public function getLine() : string {
-        return $this->getException()->getLine().'';
+        return $this->getException() !== null ? $this->getException()->getLine().'' : 'X';
     }
     /**
      * Returns a string that represents exception message.
@@ -62,7 +62,7 @@ abstract class AbstractHandler {
      * @return string A string that represents exception message.
      */
     public function getMessage() : string {
-        return $this->getException()->getMessage();
+        return $this->getException() !== null ? $this->getException()->getMessage() : 'No Message';
     }
     /**
      * Returns the name of the handler.
@@ -116,6 +116,9 @@ abstract class AbstractHandler {
     }
     /**
      * Checks if the handler will be called in case of error after shutdown.
+     * 
+     * Note that if the handler is set as shutdown handler, it will not
+     * get executed during normal events.
      */
     public abstract function isShutdownHandler() : bool;
     /**

@@ -112,7 +112,7 @@ class Handler {
 
             foreach (Handler::get()->handlersPool as $h) {
                 if ($h->isActive() && !$h->isShutdownHandler()) {
-                    if ($ex !== null) {
+                    if ($ex instanceof Throwable) {
                         $h->setException($ex);
                     }
                     $h->setIsExecuting(true);
@@ -123,14 +123,17 @@ class Handler {
             }
         };
         $this->shutdownFunction = function () {
-            if ($this->lastException !== null) {
+            $lastException = Handler::get()->lastException;
+            if ($lastException !== null) {
                 if (ob_get_length()) {
                     ob_clean();
                 }
 
                 foreach (Handler::get()->handlersPool as $h) {
                     if ($h->isActive() && $h->isShutdownHandler() && !$h->isExecuted() && !$h->isExecuting()) {
-                        $h->setException($this->lastException);
+                        if ($lastException instanceof Throwable) {
+                            $h->setException($lastException);
+                        }
                         $h->handle();
                         $h->setIsExecuted(true);
                     }
@@ -146,7 +149,7 @@ class Handler {
         $this->handlersPool[] = new DefaultHandler();
     }
     public function invokShutdownHandler() {
-        self::get()->lastException = new Exception();
+        self::get()->lastException = 'TEST';
         call_user_func(self::get()->shutdownFunction);
     }
     public function invokExceptionHandler() {

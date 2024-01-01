@@ -73,6 +73,16 @@ class DefaultExceptionsHandler extends AbstractExceptionHandler {
         }
         echo '</pre>';
     }
+
+    public function isActive(): bool {
+        //Activate or deactivate the handler based on conditions.
+        return true;
+    }
+
+    public function isShutdownHandler(): bool {
+        //Set the handler as shutdown handler (errors after processing)
+        return false;
+    }
 }
 
 ```

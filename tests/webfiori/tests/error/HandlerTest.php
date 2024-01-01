@@ -60,6 +60,7 @@ class HandlerTest extends TestCase {
         $this->assertFalse(defined('SampleHandler2'));
         $h->invokExceptionHandler();
         $this->assertFalse(defined('SampleHandler2'));
+        $h->unregisterHandler($h->getHandler('Default'));
         $h->invokShutdownHandler();
         $this->assertTrue(defined('SampleHandler2'));
     }

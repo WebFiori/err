@@ -97,15 +97,15 @@ class Handler {
     private $exceptionsHandler;
     private $shutdownFunction;
     private function __construct() {
-        //ini_set('display_startup_errors', 1);
-        //ini_set('display_errors', 1);
+        ini_set('display_startup_errors', 1);
+        ini_set('display_errors', 1);
         error_reporting(-1);
         $this->errToExceptionHandler = function (int $errno, string $errString, string $errFile, int $errLine) {
             //Convert errors to exceptions
             $errClass = TraceEntry::extractClassName($errFile);
             $errType = Handler::ERR_TYPES[$errno];
             $message = 'An exception caused by an error. '.$errType['description'].': '.$errString.' at '.$errClass.' Line '.$errLine;
-            throw new ErrorHandlerException($message, $errno, $errFile);
+            throw new ErrorHandlerException($message, $errno, $errFile, $errLine);
         };
         $this->exceptionsHandler = function (Throwable $ex = null) {
             Handler::get()->lastException = $ex;
@@ -141,9 +141,8 @@ class Handler {
             }
         };
         $this->isErrOccured = false;
-        set_exception_handler($this->exceptionsHandler);
         set_error_handler($this->errToExceptionHandler);
-        
+        set_exception_handler($this->exceptionsHandler);
         register_shutdown_function($this->shutdownFunction);
         $this->handlersPool = [];
         $this->handlersPool[] = new DefaultHandler();

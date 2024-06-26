@@ -12,7 +12,7 @@ class SampleHandler2 extends AbstractHandler {
         $this->setName('H2');
     }
     public function handle() {
-        define('SampleHandler2', 'Yes');
+       !defined('SampleHandler2') ? define('SampleHandler2', 'Yes') : '';
     }
 
     public function isActive(): bool {

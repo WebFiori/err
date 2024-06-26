@@ -8,6 +8,8 @@ use webfiori\error\AbstractHandler;
 class SampleHandler1 extends AbstractHandler {
     public function __construct() {
         parent::__construct();
+        $this->setPriority(1);
+        $this->setName('H1');
     }
     public function handle() {
         define('SampleHandler1', 'Yes');

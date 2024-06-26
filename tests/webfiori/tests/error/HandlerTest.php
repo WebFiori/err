@@ -9,6 +9,7 @@ require_once 'SampleHandler3.php';
 use PHPUnit\Framework\TestCase;
 use webfiori\error\ErrorHandlerException;
 use webfiori\error\Handler;
+use const SampleHandler3;
 /**
  * Description of HandlerTest
  *
@@ -34,11 +35,11 @@ class HandlerTest extends TestCase {
      */
     public function test01() {
         $h = Handler::get();
-        $this->assertFalse($h->hasHandler('New Handler'));
+        $this->assertFalse($h->hasHandler('H1'));
         $h->registerHandler(new SampleHandler1());
-        $this->assertTrue($h->hasHandler('New Handler'));
-        $h->unregisterHandler($h->getHandler('New Handler'));
-        $this->assertFalse($h->hasHandler('New Handler'));
+        $this->assertTrue($h->hasHandler('H1'));
+        $h->unregisterHandler($h->getHandler('H1'));
+        $this->assertFalse($h->hasHandler('H1'));
     }
     /**
      * @test
@@ -64,6 +65,28 @@ class HandlerTest extends TestCase {
         $h->unregisterHandler($h->getHandler('Default'));
         $h->invokShutdownHandler();
         $this->assertTrue(defined('SampleHandler2'));
+    }
+    /**
+     * @test
+     */
+    public function test04() {
+        $h = Handler::get();
+        $this->assertFalse($h->hasHandler('H1'));
+        $h->registerHandler(new SampleHandler1());
+        $this->assertTrue($h->hasHandler('H1'));
+        $h->unregisterHandlerByName('H1');
+        $this->assertFalse($h->hasHandler('H1'));
+    }
+    /**
+     * @test
+     */
+    public function test05() {
+        $h = Handler::get();
+        $this->assertFalse($h->hasHandler('H1'));
+        $h->registerHandler(new SampleHandler1());
+        $this->assertTrue($h->hasHandler('H1'));
+        $h->unregisterHandlerByName(SampleHandler1::class);
+        $this->assertFalse($h->hasHandler('H1'));
     }
     /**
      * @test

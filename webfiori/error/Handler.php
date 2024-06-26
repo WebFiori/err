@@ -243,6 +243,26 @@ class Handler {
         }
     }
     /**
+     * Remove a registered errors handler using its name or namespace.
+     * 
+     * @param string $h The name of the handler. Also, this can be the namespace
+     * of the handler obtained using the syntax Clazz::class.
+     */
+    public static function unregisterHandlerByName(string $h) : bool {
+        $handler = self::getHandler($h);
+        if ($handler !== null) {
+            return self::unregisterHandler($handler);
+        }
+        if (!class_exists($h)) {
+            return false;
+        }
+        $handler = new $h();
+        if (!($handler instanceof AbstractHandler)) {
+            return false;
+        }
+        return self::unregisterHandler($handler);
+    }
+    /**
      * Remove a registered errors handler.
      * 
      * @param AbstractHandler $h A class that implements a custom

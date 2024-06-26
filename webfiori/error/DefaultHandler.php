@@ -4,7 +4,7 @@ namespace webfiori\error;
 /**
  * The default exceptions handler.
  * 
- * This simple handler will show the exception alongside the message ant trace
+ * This simple handler will show the exception alongside the message and trace
  * using 'echo'.
  *
  * @author Ibrahim

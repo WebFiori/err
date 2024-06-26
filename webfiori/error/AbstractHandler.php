@@ -13,6 +13,7 @@ abstract class AbstractHandler {
     private $isExecuting;
     private $name;
     private $traceArr;
+    private $priority;
     /**
      * Creates new instance of the class.
      */
@@ -21,6 +22,34 @@ abstract class AbstractHandler {
         $this->name = 'New Handler';
         $this->isCalled = false;
         $this->isExecuting = false;
+        $this->priority = 0;
+    }
+    /**
+     * Returns the priority of the handler.
+     * 
+     * The priority is a number which is used to set execution order of
+     * handlers. A positive number indicates that the handler has higher priority
+     * and will get executed first.
+     * 
+     * @return int A number that represents the priority. Default is 0.
+     */
+    public function getPriority() : int {
+        return $this->priority;
+    }
+    /**
+     * Sets the priority of the handler.
+     * 
+     * The priority is a number which is used to set execution order of
+     * handlers. A positive number indicates that the handler has higher priority
+     * and will get executed first.
+     * 
+     * @param int $priority A number that represents the priority. It must be
+     * positive value.
+     */
+    public function setPriority(int $priority) {
+        if ($priority >= 0) {
+            $this->priority = $priority;
+        }
     }
     /**
      * Returns a string that represents the name of the class that an exception

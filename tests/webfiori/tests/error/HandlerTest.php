@@ -4,6 +4,7 @@ namespace webfiori\tests\error;
 
 require_once 'SampleHandler1.php';
 require_once 'SampleHandler2.php';
+require_once 'SampleHandler3.php';
 
 use PHPUnit\Framework\TestCase;
 use webfiori\error\ErrorHandlerException;
@@ -63,5 +64,34 @@ class HandlerTest extends TestCase {
         $h->unregisterHandler($h->getHandler('Default'));
         $h->invokShutdownHandler();
         $this->assertTrue(defined('SampleHandler2'));
+    }
+    /**
+     * @test
+     */
+    public function testPriority00() {
+        $h = Handler::get();
+        $h->reset();
+        $h->registerHandler(new SampleHandler1());
+        $h->registerHandler(new SampleHandler2());
+        $h->registerHandler(new SampleHandler3());
+        $this->assertEquals(1, $h->getHandler('H1')->getPriority());
+        $this->assertEquals(44, $h->getHandler('H2')->getPriority());
+        $this->assertEquals(5, $h->getHandler('H3')->getPriority());
+        $this->assertEquals([
+           'Default', 'H1', 'H2', 'H3'
+        ], array_map(function ($x) {
+            return $x->getName();
+        }, $h->getHandlers()));
+        $h->sortHandlers();
+        $this->assertEquals([
+            'H2', 'H3', 'H1', 'Default'
+        ], array_map(function ($x) {
+            return $x->getName();
+        }, $h->getHandlers()));
+        $this->assertEquals([
+            44, 5, 1, 0
+        ], array_map(function ($x) {
+            return $x->getPriority();
+        }, $h->getHandlers()));
     }
 }

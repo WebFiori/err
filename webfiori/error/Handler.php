@@ -109,7 +109,7 @@ class Handler {
         };
         $this->exceptionsHandler = function (Throwable $ex = null) {
             Handler::get()->lastException = $ex;
-
+            Handler::get()->sortHandlers();
             foreach (Handler::get()->handlersPool as $h) {
                 if ($h->isActive() && !$h->isShutdownHandler()) {
                     if ($ex instanceof Throwable) {
@@ -150,6 +150,17 @@ class Handler {
     public function invokShutdownHandler() {
         self::get()->lastException = 'TEST';
         call_user_func(self::get()->shutdownFunction);
+    }
+    /**
+     * Sort all registered handlers based on their priority.
+     * 
+     * The ones with higher priority will come first.
+     */
+    public function sortHandlers() {
+        $customSortFunc = function (AbstractHandler $first, AbstractHandler $second) {
+            return $second->getPriority() - $first->getPriority();
+        };
+        usort($this->handlersPool, $customSortFunc);
     }
     public function invokExceptionHandler() {
         call_user_func(self::get()->exceptionsHandler);

@@ -50,6 +50,12 @@ namespace webfiori\error;
 class DefaultExceptionsHandler extends AbstractExceptionHandler {
     public function __construct() {
         parent::__construct();
+
+        //Set handler name. Each registered handler must have a unique name.
+        $this->setName('Cool Handler');
+
+        //Sets the priority of the handler. Larger means that it has higher priority.
+        $this->setPriority(100);
     }
     /**
      * Handles the exception.
@@ -89,10 +95,10 @@ class DefaultExceptionsHandler extends AbstractExceptionHandler {
 
 ### Setting a Custom Exceptions Handler
 
-After implementing the handler, the developer must set it as exceptions handler. To do that, simply the developer have to use the method `Handler::setHandler()` in any place in his source code.
+After implementing the handler, the developer must set it as exceptions handler. To do that, simply the developer have to use the static method `Handler::registerHandler()` in any place in his project.
 
 ``` php
-Handler::setHandler(new DefaultExceptionsHandler());
+Handler::registerHandler(new DefaultExceptionsHandler());
 ```
 
 

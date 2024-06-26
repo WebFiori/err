@@ -193,6 +193,14 @@ class Handler {
         return $h;
     }
     /**
+     * Returns an array that contains all registered handlers as objects.
+     * 
+     * @return array
+     */
+    public static function getHandlers() : array {
+        return self::get()->handlersPool;
+    }
+    /**
      * Returns the instance which is used to handle exceptions and errors.
      * 
      * @return Handler An instance of the class.

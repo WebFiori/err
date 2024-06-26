@@ -165,6 +165,11 @@ class Handler {
     public function invokExceptionHandler() {
         call_user_func(self::get()->exceptionsHandler);
     }
+    /**
+     * Reset handler status to default.
+     * 
+     * This will remove all registered handlers and only add the default one.
+     */ 
     public static function reset() {
         $h = self::get();
         $h->handlersPool = [];

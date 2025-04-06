@@ -21,19 +21,19 @@ class DefaultHandler extends AbstractHandler {
      * Handles the exception.
      */
     public function handle() {
-        echo '<pre>';
-        echo 'An exception was thrown at '.$this->getClass().' line '.$this->getLine().'.<br>';
-        echo 'Exception message: '.$this->getMessage().'.<br>';
-        echo 'Stack trace:<br>';
+        echo '<pre>'."\n";
+        echo 'An exception was thrown at '.$this->getClass().' line '.$this->getLine().".\n";
+        echo 'Exception message: '.$this->getMessage().".\n";
+        echo "Stack trace:\n";
         $trace = $this->getTrace();
 
         if (count($trace) == 0) {
-            echo '&lt;Empty&gt;';
+            echo "(No Trace)\n";
         } else {
             $index = '0';
 
             foreach ($trace as $entry) {
-                echo '#'.$index.' '.$entry.'<br>';
+                echo '#'.$index.' '.$entry."\n";
                 $index++;
             }
         }
@@ -52,9 +52,9 @@ class DefaultHandler extends AbstractHandler {
     /**
      * Checks if the handler will be executed as a shutdown handler.
      *
-     * @return bool The method will always return true.
+     * @return bool The method will always return false.
      */
     public function isShutdownHandler(): bool {
-        return true;
+        return false;
     }
 }

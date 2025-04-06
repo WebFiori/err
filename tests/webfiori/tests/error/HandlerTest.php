@@ -7,6 +7,7 @@ require_once 'SampleHandler2.php';
 require_once 'SampleHandler3.php';
 
 use PHPUnit\Framework\TestCase;
+use webfiori\error\DefaultHandler;
 use webfiori\error\ErrorHandlerException;
 use webfiori\error\Handler;
 use const SampleHandler3;
@@ -22,9 +23,9 @@ class HandlerTest extends TestCase {
     public function test00() {
         $this->expectException(ErrorHandlerException::class);
         if (PHP_MAJOR_VERSION == 7) {
-            $msg = 'Run-time notice: Undefined variable: y at HandlerTest Line 31';
+            $msg = 'Run-time notice: Undefined variable: y at HandlerTest Line 32';
         } else {
-            $msg = 'An exception caused by an error. Run-time warning: Undefined variable $y at HandlerTest Line 31';
+            $msg = 'An exception caused by an error. Run-time warning: Undefined variable $y at HandlerTest Line 32';
         }
         $this->expectExceptionMessage($msg);
         $h = Handler::get();
@@ -49,7 +50,7 @@ class HandlerTest extends TestCase {
         $h->reset();
         $h->registerHandler(new SampleHandler1());
         $this->assertFalse(defined('SampleHandler1'));
-        $h->invokExceptionHandler();
+        $h->invokExceptionsHandler();
         $this->assertTrue(defined('SampleHandler1'));
     }
     /**
@@ -60,7 +61,7 @@ class HandlerTest extends TestCase {
         $h->reset();
         $h->registerHandler(new SampleHandler2());
         $this->assertFalse(defined('SampleHandler2'));
-        $h->invokExceptionHandler();
+        $h->invokExceptionsHandler();
         $this->assertFalse(defined('SampleHandler2'));
         $h->unregisterHandler($h->getHandler('Default'));
         $h->invokShutdownHandler();
@@ -116,5 +117,39 @@ class HandlerTest extends TestCase {
         ], array_map(function ($x) {
             return $x->getPriority();
         }, $h->getHandlers()));
+    }
+    public function testHandel00() {
+        ob_start();
+        Handler::reset();
+        Handler::get()->invokExceptionsHandler();
+        $output = ob_get_contents();
+        ob_end_flush();
+        $this->assertEquals("<pre>\n"
+                . "An exception was thrown at (Unkwon Class) line (Unkwon Line).\n"
+                . "Exception message: No Message.\n"
+                . "Stack trace:\n"
+                . "(No Trace)\n"
+                . "</pre>", $output);
+    }
+    public function testHandel01() {
+        ob_start();
+        Handler::reset();
+        Handler::get()->invokExceptionsHandler(new \Exception("Test Exc", 33));
+        $output = ob_get_contents();
+        ob_end_flush();
+        $this->assertEquals("<pre>\n"
+                . "An exception was thrown at HandlerTest line 137.\n"
+                . "Exception message: Test Exc.\n"
+                . "Stack trace:\n"
+                . "#0 At class PHPUnit\Framework\TestCase line 1264\n"
+                . "#1 At class PHPUnit\Framework\TestCase line 930\n"
+                . "#2 At class PHPUnit\Framework\TestResult line 586\n"
+                . "#3 At class PHPUnit\Framework\TestCase line 723\n"
+                . "#4 At class PHPUnit\Framework\TestSuite line 507\n"
+                . "#5 At class PHPUnit\Framework\TestSuite line 507\n"
+                . "#6 At class PHPUnit\TextUI\TestRunner line 489\n"
+                . "#7 At class PHPUnit\TextUI\Command line 124\n"
+                . "#8 At class PHPUnit\TextUI\Command line 93\n"
+                . "</pre>", $output);
     }
 }

@@ -107,7 +107,7 @@ class Handler {
             $message = 'An exception caused by an error. '.$errType['description'].': '.$errString.' at '.$errClass.' Line '.$errLine;
             throw new ErrorHandlerException($message, $errno, $errFile, $errLine);
         };
-        $this->exceptionsHandler = function (Throwable $ex = null) {
+        $this->exceptionsHandler = function (?Throwable $ex = null) {
             Handler::get()->lastException = $ex;
             Handler::get()->sortHandlers();
             foreach (Handler::get()->handlersPool as $h) {
@@ -147,6 +147,11 @@ class Handler {
         $this->handlersPool = [];
         $this->handlersPool[] = new DefaultHandler();
     }
+    public function invokExceptionsHandler(?Throwable $ex = null) {
+        self::get()->sortHandlers();
+        self::get()->lastException = 'TEST';
+        call_user_func(self::get()->exceptionsHandler, $ex);
+    }
     public function invokShutdownHandler() {
         self::get()->lastException = 'TEST';
         call_user_func(self::get()->shutdownFunction);
@@ -161,9 +166,6 @@ class Handler {
             return $second->getPriority() - $first->getPriority();
         };
         usort($this->handlersPool, $customSortFunc);
-    }
-    public function invokExceptionHandler() {
-        call_user_func(self::get()->exceptionsHandler);
     }
     /**
      * Reset handler status to default.

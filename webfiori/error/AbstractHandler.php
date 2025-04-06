@@ -83,7 +83,7 @@ abstract class AbstractHandler {
      * @return string The number of line at which the exception was thrown at.
      */
     public function getLine() : string {
-        return $this->getException() !== null ? $this->getException()->getLine().'' : 'X';
+        return $this->getException() !== null ? $this->getException()->getLine().'' : '(Unkwon Line)';
     }
     /**
      * Returns a string that represents exception message.
@@ -198,14 +198,14 @@ abstract class AbstractHandler {
             $this->traceArr = $ex->getDebugTrace();
         } else {
             $trace = $ex->getTrace();
-            $currentLine = $trace[0]['line'] ?? 'X';
-            $currentFile = $trace[0]['file'] ?? 'X';
+            $currentLine = $trace[0]['line'] ?? '(Unkwon Line)';
+            $currentFile = $trace[0]['file'] ?? '(Unkwon File)';
             $idx = 0;
 
             foreach ($trace as $traceEntry) {
                 if ($idx != 0) {
-                    $nextFile = $traceEntry['file'] ?? 'X';
-                    $nextLine = $traceEntry['line'] ?? 'X';
+                    $nextFile = $traceEntry['file'] ?? '(Unkwon Line)';
+                    $nextLine = $traceEntry['line'] ?? '(Unkwon Line)';
                     $traceEntry['file'] = $currentFile;
                     $traceEntry['line'] = $currentLine;
                     $this->traceArr[] = new TraceEntry($traceEntry);

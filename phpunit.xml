@@ -4,9 +4,10 @@
     </php>
     <filter>
         <whitelist addUncoveredFilesFromWhitelist="true">
-            <file>./src/webfiori/error/TraceEntry.php</file>
-            <file>./src/webfiori/error/Handler.php</file>
-            <file>./src/webfiori/error/AbstractHandler.php</file>
+            <file>./webfiori/error/TraceEntry.php</file>
+            <file>./webfiori/error/Handler.php</file>
+            <file>./webfiori/error/AbstractHandler.php</file>
+            <file>./webfiori/error/DefaultHandler.php</file>
         </whitelist>
     </filter>
     <logging>

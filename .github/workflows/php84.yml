@@ -40,3 +40,19 @@ jobs:
         
       - name: CodeCov
         uses: codecov/codecov-action@v1
+        
+  release_prod:
+    name: Prepare Production Release Branch / Publish Release
+    needs:
+      - "test"
+      - "coding_standards_check"
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/release-please-action@v4
+        with:
+          release-type: php
+          target-branch: main
+          config-file: release-please-config.json
+          token: ${{ secrets.GITHUB_TOKEN }}

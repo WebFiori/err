@@ -27,7 +27,7 @@ class TraceEntry {
     public function __construct(array $debugTraceEntry) {
         $this->method = $debugTraceEntry['function'] ?? '';
         $this->file = $debugTraceEntry['file'] ?? $this->method;
-        $this->line = $debugTraceEntry['line'] ?? 'X';
+        $this->line = $debugTraceEntry['line'] ?? '(Unkown Line)';
         $this->class = $debugTraceEntry['class'] ?? self::extractClassName($this->file);
     }
     /**
@@ -37,15 +37,12 @@ class TraceEntry {
      */
     public function __toString() {
         $line = $this->getLine();
-        $class = $this->getClass();
 
-        if ($class == 'X') {
-            $retVal = 'NO CLASS';
-        } else {
-            $retVal = 'At class '.$this->getClass();
-        }
+        
+        $retVal = 'At class '.$this->getClass();
 
-        if ($line != 'X') {
+
+        if ($line != '(Unkwon Line)') {
             $retVal .= ' line '.$line;
         }
 
@@ -64,7 +61,7 @@ class TraceEntry {
         $expl = explode(DIRECTORY_SEPARATOR, $fixed);
 
         if (count($expl) <= 1) {
-            return 'X';
+            return '(Unkwon Class)';
         }
         $classFile = $expl[count($expl) - 1];
         $firstChar = $classFile[0];

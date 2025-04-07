@@ -17,15 +17,11 @@ A library for handling PHP errors and exceptions in a better way.
 ## Supported PHP Versions
 |                                                                                       Build Status                                                                                       |
 |:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php70.yml"><img src="https://github.com/WebFiori/err/actions/workflows/php70.yml/badge.svg?branch=main"></a>  |
-| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php71.yml"><img src="https://github.com/WebFiori/err/actions/workflows/php71.yml/badge.svg?branch=main"></a>  |
-| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php72.yml"><img src="https://github.com/WebFiori/err/actions/workflows/php72.yml/badge.svg?branch=main"></a>  |
-| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php73.yml"><img src="https://github.com/WebFiori/err/actions/workflows/php73.yml/badge.svg?branch=main"></a>  |
-| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php74.yml"><img src="https://github.com/WebFiori/err/actions/workflows/php74.yml/badge.svg?branch=main"></a>  |
 | <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php80.yml"><img src="https://github.com/WebFiori/err/actions/workflows/php80.yml/badge.svg?branch=main"></a>  |
 | <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php81.yml"><img src="https://github.com/WebFiori/err/actions/workflows/php81.yml/badge.svg?branch=main"></a>  |
 | <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php82.yml"><img src="https://github.com/WebFiori/err/actions/workflows/php82.yml/badge.svg?branch=main"></a>  |
 | <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php83.yml"><img src="https://github.com/WebFiori/err/actions/workflows/php83.yml/badge.svg?branch=main"></a>  |
+| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php84.yml"><img src="https://github.com/WebFiori/err/actions/workflows/php84.yml/badge.svg?branch=main"></a>  |
 
 ## Installation
 The library can be included in your project by including following entry in your `require` section of your `composer.json`: `"webfiori/err":"*"`.

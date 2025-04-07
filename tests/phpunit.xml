@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit stderr="true" colors="true" bootstrap="tests/bootstrap.php">
+<phpunit colors="true" bootstrap="bootstrap.php">
     <php>
     </php>
     <filter>
         <whitelist addUncoveredFilesFromWhitelist="true">
-            <file>./src/webfiori/error/TraceEntry.php</file>
-            <file>./src/webfiori/error/Handler.php</file>
-            <file>./src/webfiori/error/AbstractHandler.php</file>
+            <file>../webfiori/error/TraceEntry.php</file>
+            <file>../webfiori/error/Handler.php</file>
+            <file>../webfiori/error/AbstractHandler.php</file>
+            <file>../webfiori/error/DefaultHandler.php</file>
         </whitelist>
     </filter>
     <logging>
@@ -14,7 +15,7 @@
     </logging>
     <testsuites>
         <testsuite name="Tests">
-            <directory>./tests/webfiori/tests/error</directory>
+            <directory>./webfiori/tests/error</directory>
         </testsuite>
     </testsuites>
 </phpunit>

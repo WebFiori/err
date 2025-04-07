@@ -60,7 +60,8 @@ class Handler {
             'type' => 'E_USER_NOTICE',
             'description' => 'User-generated notice message'
         ],
-        E_STRICT => [
+        //The depricated E_STRICT
+        2048 => [
             'type' => 'E_STRICT',
             'description' => 'PHP suggest a change'
         ],

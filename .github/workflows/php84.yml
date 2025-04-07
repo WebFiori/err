@@ -45,7 +45,6 @@ jobs:
     name: Prepare Production Release Branch / Publish Release
     needs:
       - "test"
-      - "coding_standards_check"
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:

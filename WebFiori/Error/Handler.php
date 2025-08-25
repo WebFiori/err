@@ -3,6 +3,7 @@ namespace WebFiori\Error;
 
 use Exception;
 use Throwable;
+use WebFiori\Error\Config\HandlerConfig;
 /**
  * The core class which is used to define errors and exceptions handling.
  * 
@@ -134,6 +135,11 @@ class Handler {
     private static int $memoryThreshold = 50 * 1024 * 1024; // 50MB
     
     /**
+     * @var \WebFiori\Error\Config\HandlerConfig|null Configuration instance
+     */
+    private static ?\WebFiori\Error\Config\HandlerConfig $config = null;
+    
+    /**
      * @var bool
      */
     private bool $isErrOccured;
@@ -168,19 +174,27 @@ class Handler {
      * - Adding the default handler
      */
     private function __construct() {
-        $this->initializeErrorReporting();
+        $this->initializeConfiguration();
         $this->createHandlers();
         $this->registerPhpHandlers();
         $this->initializeHandlerPool();
     }
     
     /**
-     * Initialize PHP error reporting settings.
+     * Initialize configuration system.
+     * 
+     * This method sets up the configuration without modifying global PHP settings
+     * unless explicitly configured to do so.
      */
-    private function initializeErrorReporting(): void {
-        ini_set('display_startup_errors', '1');
-        ini_set('display_errors', '1');
-        error_reporting(-1);
+    private function initializeConfiguration(): void {
+        // Use existing config or create default
+        if (self::$config === null) {
+            self::$config = new \WebFiori\Error\Config\HandlerConfig();
+        }
+        
+        // Apply configuration (respects modifyGlobalSettings flag)
+        self::$config->apply();
+        
         $this->isErrOccured = false;
     }
     
@@ -395,6 +409,11 @@ class Handler {
         // Reset infinite loop protection
         self::$handlerExecutionCount = [];
         self::$isHandlingException = false;
+        
+        // Re-apply current configuration (don't reset it)
+        if (self::$config !== null) {
+            self::$config->apply();
+        }
     }
     
     /**
@@ -636,6 +655,53 @@ class Handler {
     }
     
     /**
+     * Set configuration for the error handler.
+     * 
+     * @param HandlerConfig $config Configuration instance
+     */
+    public static function setConfig(HandlerConfig $config): void {
+        // Restore previous config if it exists
+        if (self::$config !== null) {
+            self::$config->restore();
+        }
+        
+        self::$config = $config;
+        
+        // Apply new configuration if handler is already initialized
+        if (self::$inst !== null) {
+            self::$config->apply();
+        }
+    }
+    
+    /**
+     * Get current configuration.
+     * 
+     * @return HandlerConfig
+     */
+    public static function getConfig(): HandlerConfig {
+        if (self::$config === null) {
+            self::$config = new HandlerConfig();
+        }
+        
+        return self::$config;
+    }
+    
+    /**
+     * Reset configuration to defaults.
+     */
+    public static function resetConfig(): void {
+        if (self::$config !== null) {
+            self::$config->restore();
+        }
+        
+        self::$config = new HandlerConfig();
+        
+        if (self::$inst !== null) {
+            self::$config->apply();
+        }
+    }
+    
+    /**
      * Clean up memory by removing unused handler references and resetting counters.
      * Should be called periodically in long-running processes.
      */
@@ -705,6 +771,12 @@ class Handler {
             self::$handlerExecutionCount = [];
             self::$handlerWeakRefs = [];
             self::$isHandlingException = false;
+            
+            // Restore original PHP configuration
+            if (self::$config !== null) {
+                self::$config->restore();
+                self::$config = null;
+            }
             
             // Restore original error handler
             restore_error_handler();

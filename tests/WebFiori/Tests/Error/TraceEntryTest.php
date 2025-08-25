@@ -14,7 +14,7 @@ class TraceEntryTest extends TestCase {
      */
     public function test00() {
         $entry = new TraceEntry([]);
-        $this->assertEquals('At class (Unkwon Class) line (Unkown Line)', $entry.'');
+        $this->assertEquals('At class (Unknown Class)', $entry.'');
         $this->assertTrue(true);
     }
     /**

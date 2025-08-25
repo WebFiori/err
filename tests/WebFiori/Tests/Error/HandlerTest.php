@@ -50,7 +50,7 @@ class HandlerTest extends TestCase {
         $h->reset();
         $h->registerHandler(new SampleHandler1());
         $this->assertFalse(defined('SampleHandler1'));
-        $h->invokExceptionsHandler();
+        $h->invokeExceptionsHandler();
         $this->assertTrue(defined('SampleHandler1'));
     }
     /**
@@ -61,10 +61,10 @@ class HandlerTest extends TestCase {
         $h->reset();
         $h->registerHandler(new SampleHandler2());
         $this->assertFalse(defined('SampleHandler2'));
-        $h->invokExceptionsHandler();
+        $h->invokeExceptionsHandler();
         $this->assertFalse(defined('SampleHandler2'));
         $h->unregisterHandler($h->getHandler('Default'));
-        $h->invokShutdownHandler();
+        $h->invokeShutdownHandler();
         $this->assertTrue(defined('SampleHandler2'));
     }
     /**
@@ -121,11 +121,11 @@ class HandlerTest extends TestCase {
     public function testHandel00() {
         ob_start();
         Handler::reset();
-        Handler::get()->invokExceptionsHandler();
+        Handler::get()->invokeExceptionsHandler();
         $output = ob_get_contents();
         ob_end_flush();
         $this->assertEquals("<pre>\n"
-                . "An exception was thrown at (Unkwon Class) line (Unkwon Line).\n"
+                . "An exception was thrown at (Unknown Class) line (Unknown Line).\n"
                 . "Exception message: No Message.\n"
                 . "Stack trace:\n"
                 . "(No Trace)\n"
@@ -134,7 +134,7 @@ class HandlerTest extends TestCase {
     public function testHandel01() {
         ob_start();
         Handler::reset();
-        Handler::get()->invokExceptionsHandler(new \Exception("Test Exc", 33));
+        Handler::get()->invokeExceptionsHandler(new \Exception("Test Exc", 33));
         $output = ob_get_contents();
         ob_end_flush();
         $this->assertEquals("<pre>\n"

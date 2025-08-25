@@ -11,7 +11,7 @@ class SampleHandler2 extends AbstractHandler {
         $this->setPriority(44);
         $this->setName('H2');
     }
-    public function handle() {
+    public function handle(): void {
        !defined('SampleHandler2') ? define('SampleHandler2', 'Yes') : '';
     }
 

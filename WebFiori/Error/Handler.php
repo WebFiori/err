@@ -60,7 +60,7 @@ class Handler {
             'type' => 'E_USER_NOTICE',
             'description' => 'User-generated notice message'
         ],
-        //The depricated E_STRICT
+        //The deprecated E_STRICT
         2048 => [
             'type' => 'E_STRICT',
             'description' => 'PHP suggest a change'
@@ -78,36 +78,55 @@ class Handler {
             'description' => 'User-generated warning message'
         ],
     ];
-    private $handlersPool;
+    
     /**
-     * 
-     * @var Handler
+     * @var array<AbstractHandler>
      */
-    private static $inst;
+    private array $handlersPool;
+    
     /**
-     * 
-     * @var AbstractHandler
+     * @var Handler|null
      */
-    private $isErrOccured;
+    private static ?Handler $inst = null;
+    
     /**
-     * 
+     * @var bool
+     */
+    private bool $isErrOccured;
+    
+    /**
      * @var Throwable|null
      */
-    private $lastException;
+    private ?Throwable $lastException = null;
+    
+    /**
+     * @var callable
+     */
     private $errToExceptionHandler;
+    
+    /**
+     * @var callable
+     */
     private $exceptionsHandler;
+    
+    /**
+     * @var callable
+     */
     private $shutdownFunction;
+    
     private function __construct() {
         ini_set('display_startup_errors', 1);
         ini_set('display_errors', 1);
         error_reporting(-1);
+        
         $this->errToExceptionHandler = function (int $errno, string $errString, string $errFile, int $errLine) {
             //Convert errors to exceptions
             $errClass = TraceEntry::extractClassName($errFile);
-            $errType = Handler::ERR_TYPES[$errno];
+            $errType = Handler::ERR_TYPES[$errno] ?? ['type' => 'UNKNOWN', 'description' => 'Unknown error'];
             $message = 'An exception caused by an error. '.$errType['description'].': '.$errString.' at '.$errClass.' Line '.$errLine;
             throw new ErrorHandlerException($message, $errno, $errFile, $errLine);
         };
+        
         $this->exceptionsHandler = function (?Throwable $ex = null) {
             Handler::get()->lastException = $ex;
             Handler::get()->sortHandlers();
@@ -123,6 +142,7 @@ class Handler {
                 }
             }
         };
+        
         $this->shutdownFunction = function () {
             $lastException = Handler::get()->lastException;
             if ($lastException !== null) {
@@ -141,6 +161,7 @@ class Handler {
                 }
             }
         };
+        
         $this->isErrOccured = false;
         set_error_handler($this->errToExceptionHandler);
         set_exception_handler($this->exceptionsHandler);
@@ -148,37 +169,54 @@ class Handler {
         $this->handlersPool = [];
         $this->handlersPool[] = new DefaultHandler();
     }
-    public function invokExceptionsHandler(?Throwable $ex = null) {
+    
+    /**
+     * Invoke the exceptions handler for testing purposes.
+     * 
+     * @param Throwable|null $ex The exception to handle
+     */
+    public function invokeExceptionsHandler(?Throwable $ex = null): void {
         self::get()->sortHandlers();
-        self::get()->lastException = 'TEST';
+        self::get()->lastException = $ex;
         call_user_func(self::get()->exceptionsHandler, $ex);
     }
-    public function invokShutdownHandler() {
-        self::get()->lastException = 'TEST';
+    
+    /**
+     * Invoke the shutdown handler for testing purposes.
+     */
+    public function invokeShutdownHandler(): void {
+        // Create a test exception if none exists
+        if (self::get()->lastException === null) {
+            self::get()->lastException = new Exception('Test exception for shutdown handler');
+        }
         call_user_func(self::get()->shutdownFunction);
     }
+    
     /**
      * Sort all registered handlers based on their priority.
      * 
      * The ones with higher priority will come first.
      */
-    public function sortHandlers() {
-        $customSortFunc = function (AbstractHandler $first, AbstractHandler $second) {
+    public function sortHandlers(): void {
+        $customSortFunc = function (AbstractHandler $first, AbstractHandler $second): int {
             return $second->getPriority() - $first->getPriority();
         };
         usort($this->handlersPool, $customSortFunc);
     }
+    
     /**
      * Reset handler status to default.
      * 
      * This will remove all registered handlers and only add the default one.
      */ 
-    public static function reset() {
+    public static function reset(): void {
         $h = self::get();
         $h->handlersPool = [];
         $h->handlersPool[] = new DefaultHandler();
+        $h->lastException = null;
         set_error_handler($h->errToExceptionHandler);
     }
+    
     /**
      * Returns a handler given its name.
      * 
@@ -187,12 +225,12 @@ class Handler {
      * @return AbstractHandler|null If a handler which has the given name is found,
      * it will be returned as an object. Other than that, null is returned.
      */
-    public static function &getHandler(string $name) {
+    public static function &getHandler(string $name): ?AbstractHandler {
         $h = null;
         $trimmed = trim($name);
 
         foreach (self::get()->handlersPool as $handler) {
-            if ($handler->getName() == $trimmed) {
+            if ($handler->getName() === $trimmed) {
                 $h = $handler;
                 break;
             }
@@ -200,26 +238,29 @@ class Handler {
 
         return $h;
     }
+    
     /**
      * Returns an array that contains all registered handlers as objects.
      * 
-     * @return array
+     * @return array<AbstractHandler>
      */
-    public static function getHandlers() : array {
+    public static function getHandlers(): array {
         return self::get()->handlersPool;
     }
+    
     /**
      * Returns the instance which is used to handle exceptions and errors.
      * 
      * @return Handler An instance of the class.
      */
-    public static function get() : Handler {
+    public static function get(): Handler {
         if (self::$inst === null) {
             self::$inst = new Handler();
         }
 
         return self::$inst;
     }
+    
     /**
      * Checks if a handler is registered or not given its name.
      * 
@@ -228,64 +269,71 @@ class Handler {
      * @return bool If such handler is registered, the method will return true.
      * Other than that, the method will return false.
      */
-    public static function hasHandler(string $name) : bool {
+    public static function hasHandler(string $name): bool {
         $trimmed = trim($name);
 
         foreach (self::get()->handlersPool as $handler) {
-            if ($handler->getName() == $trimmed) {
+            if ($handler->getName() === $trimmed) {
                 return true;
             }
         }
 
         return false;
     }
+    
     /**
      * Sets a custom handler to handle exceptions.
      * 
-     * @param AbstractHandler $h A class that implements a custom
-     * handler.
+     * @param AbstractHandler $h A class that implements a custom handler.
      */
-    public static function registerHandler(AbstractHandler $h) {
+    public static function registerHandler(AbstractHandler $h): void {
         if (!self::hasHandler($h->getName())) {
             self::get()->handlersPool[] = $h;
         }
     }
+    
     /**
      * Remove a registered errors handler using its name or namespace.
      * 
      * @param string $h The name of the handler. Also, this can be the namespace
      * of the handler obtained using the syntax Clazz::class.
      */
-    public static function unregisterHandlerByName(string $h) : bool {
+    public static function unregisterHandlerByName(string $h): bool {
         $handler = self::getHandler($h);
         if ($handler !== null) {
             return self::unregisterHandler($handler);
         }
+        
+        // Improved logic: avoid creating instances unnecessarily
         if (!class_exists($h)) {
             return false;
         }
-        $handler = new $h();
-        if (!($handler instanceof AbstractHandler)) {
-            return false;
+        
+        // Find handler by class name instead of creating instance
+        foreach (self::get()->handlersPool as $existingHandler) {
+            if (get_class($existingHandler) === $h) {
+                return self::unregisterHandler($existingHandler);
+            }
         }
-        return self::unregisterHandler($handler);
+        
+        return false;
     }
+    
     /**
      * Remove a registered errors handler.
      * 
-     * @param AbstractHandler $h A class that implements a custom
-     * handler.
+     * @param AbstractHandler $h A class that implements a custom handler.
      */
-    public static function unregisterHandler(AbstractHandler $h) : bool {
+    public static function unregisterHandler(AbstractHandler $h): bool {
         $tempPool = [];
         $removed = false;
 
         foreach (self::get()->handlersPool as $handler) {
-            if ($handler->getName() != $h->getName()) {
+            if ($handler->getName() !== $h->getName()) {
                 $tempPool[] = $handler;
-                continue;
+            } else {
+                $removed = true;
             }
-            $removed = true;
         }
         self::get()->handlersPool = $tempPool;
 

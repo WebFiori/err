@@ -17,20 +17,21 @@ class DefaultHandler extends AbstractHandler {
         parent::__construct();
         $this->setName('Default');
     }
+    
     /**
      * Handles the exception.
      */
-    public function handle() {
+    public function handle(): void {
         echo '<pre>'."\n";
         echo 'An exception was thrown at '.$this->getClass().' line '.$this->getLine().".\n";
         echo 'Exception message: '.$this->getMessage().".\n";
         echo "Stack trace:\n";
         $trace = $this->getTrace();
 
-        if (count($trace) == 0) {
+        if (count($trace) === 0) {
             echo "(No Trace)\n";
         } else {
-            $index = '0';
+            $index = 0;
 
             foreach ($trace as $entry) {
                 echo '#'.$index.' '.$entry."\n";

@@ -117,7 +117,7 @@ abstract class AbstractHandler {
     /**
      * Create security configuration. Can be overridden by subclasses.
      */
-    protected function createSecurityConfig(): SecurityConfig {
+    public function createSecurityConfig(): SecurityConfig {
         return new SecurityConfig();
     }
     

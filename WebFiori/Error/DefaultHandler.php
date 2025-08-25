@@ -2,34 +2,54 @@
 namespace WebFiori\Error;
 
 /**
- * The default exceptions handler.
+ * The default exceptions handler with CLI and HTTP awareness.
  * 
  * This handler provides exception output formatting that automatically
- * adapts to the environment (development, staging, production). It displays:
+ * adapts to both the environment (development, staging, production) and
+ * the execution context (CLI vs HTTP). It displays:
  * - Exception location (class and line) - sanitized based on environment level
  * - Exception message - automatically filtered for sensitive information
  * - Stack trace - filtered and limited based on environment
  * 
- * The output is formatted as HTML with CSS classes for styling, and all
- * content is automatically sanitized to prevent XSS and information disclosure.
+ * The output format automatically adapts:
+ * - CLI: Plain text with ANSI colors and formatting
+ * - HTTP: HTML with CSS classes for styling
+ * 
+ * All content is automatically sanitized to prevent XSS and information disclosure.
  * 
  * Features:
+ * - Automatic CLI/HTTP detection and formatting
  * - Automatic path sanitization
  * - Sensitive information filtering
  * - Environment-aware output levels
  * - CSP-compliant HTML output
+ * - ANSI color support for CLI
  *
  * @author Ibrahim
  */
 class DefaultHandler extends AbstractHandler {
+    private $isCli = null;
+    
     /**
      * Creates new instance of the class.
      */
     public function __construct() {
         parent::__construct();
         $this->setName('Default');
+        
+        // Only auto-detect CLI if not already set
+        if ($this->isCli === null) {
+            $this->setIsCLI(http_response_code() === false);
+        }
     }
     
+    public function isCLI(): bool {
+        return $this->isCli ?? false;
+    }
+    
+    public function setIsCLI(bool $bool): void {
+        $this->isCli = $bool;
+    }
     /**
      * Handles the exception by outputting formatted error information.
      * 
@@ -49,22 +69,81 @@ class DefaultHandler extends AbstractHandler {
     }
     
     /**
-     * Output the opening HTML container.
+     * Output the opening container (HTML or CLI format).
      */
     private function outputExceptionHeader(): void {
-        if ($this->getSecurityConfig()->allowInlineStyles()) {
-            $this->secureOutput('<div style="border: 1px solid #dc3545; background: #f8d7da; color: #721c24; padding: 15px; margin: 10px 0; border-radius: 4px; font-family: monospace;">');
+        if ($this->isCLI()) {
+            // CLI format - use ANSI colors and plain text
+            $this->secureOutput("\n" . str_repeat('=', 60) . "\n");
+            $this->secureOutput("\033[1;31mAPPLICATION ERROR\033[0m\n");
+            $this->secureOutput(str_repeat('=', 60) . "\n");
         } else {
-            $this->secureOutput('<div class="error-container">');
+            // HTML format
+            if ($this->getSecurityConfig()->allowInlineStyles()) {
+                $this->secureOutput('<div style="border: 1px solid #dc3545; background: #f8d7da; color: #721c24; padding: 15px; margin: 10px 0; border-radius: 4px; font-family: monospace;">');
+            } else {
+                $this->secureOutput('<div class="error-container">');
+            }
+            
+            $this->secureOutput('<h3 class="error-title">Application Error</h3>');
         }
-        
-        $this->secureOutput('<h3 class="error-title">Application Error</h3>');
     }
     
     /**
-     * Output the exception details (location and message).
+     * Output the exception details (location and message) in CLI or HTML format.
      */
     private function outputExceptionDetails(): void {
+        if ($this->isCLI()) {
+            // CLI format
+            $this->outputCLIDetails();
+        } else {
+            // HTML format
+            $this->outputHTMLDetails();
+        }
+    }
+    
+    /**
+     * Output exception details in CLI format.
+     */
+    private function outputCLIDetails(): void {
+        // Show location information based on environment level
+        if ($this->getSecurityConfig()->shouldShowFullPaths() || !$this->isSecureEnvironment()) {
+            $this->secureOutput(sprintf(
+                "\033[1mLocation:\033[0m %s line %s\n",
+                $this->getClass(),
+                $this->getLine()
+            ));
+        } else {
+            $this->secureOutput("\033[1mLocation:\033[0m Application code\n");
+        }
+        
+        // Show message (automatically sanitized)
+        $message = $this->getMessage();
+        if (!empty($message) && $message !== 'No Message') {
+            if ($this->isSecureEnvironment()) {
+                $this->secureOutput("\033[1mDetails:\033[0m An error occurred during processing.\n");
+            } else {
+                $this->secureOutput(sprintf(
+                    "\033[1mMessage:\033[0m %s\n",
+                    $message
+                ));
+            }
+        }
+        
+        // Show error code if available
+        $code = $this->getCode();
+        if ($code !== '0') {
+            $this->secureOutput(sprintf(
+                "\033[1mCode:\033[0m %s\n",
+                $code
+            ));
+        }
+    }
+    
+    /**
+     * Output exception details in HTML format.
+     */
+    private function outputHTMLDetails(): void {
         // Show location information based on environment level
         if ($this->getSecurityConfig()->shouldShowFullPaths() || !$this->isSecureEnvironment()) {
             $this->secureOutput(sprintf(
@@ -100,14 +179,18 @@ class DefaultHandler extends AbstractHandler {
     }
     
     /**
-     * Output the formatted stack trace.
+     * Output the formatted stack trace in CLI or HTML format.
      */
     private function outputStackTrace(): void {
         $trace = $this->getTrace();
         
         if (empty($trace)) {
             if (!$this->isSecureEnvironment()) {
-                $this->secureOutput('<p><em>No stack trace available</em></p>');
+                if ($this->isCLI()) {
+                    $this->secureOutput("\n\033[2mNo stack trace available\033[0m\n");
+                } else {
+                    $this->secureOutput('<p><em>No stack trace available</em></p>');
+                }
             }
             return;
         }
@@ -117,6 +200,31 @@ class DefaultHandler extends AbstractHandler {
             return;
         }
         
+        if ($this->isCLI()) {
+            $this->outputCLIStackTrace($trace);
+        } else {
+            $this->outputHTMLStackTrace($trace);
+        }
+    }
+    
+    /**
+     * Output stack trace in CLI format.
+     */
+    private function outputCLIStackTrace(array $trace): void {
+        $this->secureOutput("\n\033[1mStack Trace:\033[0m\n");
+        $this->secureOutput(str_repeat('-', 40) . "\n");
+        
+        foreach ($trace as $index => $entry) {
+            $this->secureOutput(sprintf("#%d %s\n", $index, (string)$entry));
+        }
+        
+        $this->secureOutput(str_repeat('-', 40) . "\n");
+    }
+    
+    /**
+     * Output stack trace in HTML format.
+     */
+    private function outputHTMLStackTrace(array $trace): void {
         $this->secureOutput('<details class="error-trace">');
         $this->secureOutput('<summary><strong>Stack Trace</strong></summary>');
         
@@ -135,19 +243,52 @@ class DefaultHandler extends AbstractHandler {
     }
     
     /**
-     * Output the closing HTML container and additional information.
+     * Output the closing container and additional information in CLI or HTML format.
      */
     private function outputExceptionFooter(): void {
+        if ($this->isCLI()) {
+            $this->outputCLIFooter();
+        } else {
+            $this->outputHTMLFooter();
+        }
+    }
+    
+    /**
+     * Output footer in CLI format.
+     */
+    private function outputCLIFooter(): void {
+        $this->secureOutput("\n");
+        
         // Add helpful information based on environment
         if ($this->isSecureEnvironment()) {
-            $this->secureOutput('<p class="error-help"><small>If this problem persists, please contact support with the error code above.</small></p>');
+            $this->secureOutput("\033[2mIf this problem persists, please contact support with the error code above.\033[0m\n");
         } else {
-            $this->secureOutput('<p class="error-help"><small>This detailed error information is shown because you are in development mode.</small></p>');
+            $this->secureOutput("\033[2mThis detailed error information is shown because you are in development mode.\033[0m\n");
         }
         
         // Add timestamp
         $this->secureOutput(sprintf(
-            '<p class="error-timestamp"><small>Time: %s</small></p>',
+            "\033[2mTime: %s\033[0m\n",
+            date('Y-m-d H:i:s')
+        ));
+        
+        $this->secureOutput(str_repeat('=', 60) . "\n");
+    }
+    
+    /**
+     * Output footer in HTML format.
+     */
+    private function outputHTMLFooter(): void {
+        // Add helpful information based on environment
+        if ($this->isSecureEnvironment()) {
+            $this->secureOutput('<p class="error-help">If this problem persists, please contact support with the error code above.</p>');
+        } else {
+            $this->secureOutput('<p class="error-help">This detailed error information is shown because you are in development mode.</p>');
+        }
+        
+        // Add timestamp
+        $this->secureOutput(sprintf(
+            '<p class="error-timestamp">Time: %s</p>',
             date('Y-m-d H:i:s')
         ));
         

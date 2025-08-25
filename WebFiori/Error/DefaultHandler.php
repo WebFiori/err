@@ -4,8 +4,17 @@ namespace WebFiori\Error;
 /**
  * The default exceptions handler.
  * 
- * This simple handler will show the exception alongside the message and trace
- * using 'echo'.
+ * This handler provides basic exception output formatting suitable for
+ * development environments. It displays:
+ * - Exception location (class and line)
+ * - Exception message
+ * - Complete stack trace
+ * 
+ * The output is formatted as HTML with <pre> tags for better readability
+ * in web browsers, but also works in CLI environments.
+ * 
+ * Note: This handler should not be used in production environments as it
+ * may expose sensitive information.
  *
  * @author Ibrahim
  */
@@ -19,25 +28,66 @@ class DefaultHandler extends AbstractHandler {
     }
     
     /**
-     * Handles the exception.
+     * Handles the exception by outputting formatted error information.
+     * 
+     * The output includes:
+     * - Exception location (class and line number)
+     * - Exception message
+     * - Complete stack trace with numbered entries
+     * 
+     * Output is wrapped in HTML <pre> tags for better formatting.
      */
     public function handle(): void {
-        echo '<pre>'."\n";
-        echo 'An exception was thrown at '.$this->getClass().' line '.$this->getLine().".\n";
-        echo 'Exception message: '.$this->getMessage().".\n";
+        $this->outputExceptionHeader();
+        $this->outputExceptionDetails();
+        $this->outputStackTrace();
+        $this->outputExceptionFooter();
+    }
+    
+    /**
+     * Output the opening HTML tag.
+     */
+    private function outputExceptionHeader(): void {
+        echo '<pre>' . "\n";
+    }
+    
+    /**
+     * Output the exception details (location and message).
+     */
+    private function outputExceptionDetails(): void {
+        echo sprintf(
+            "An exception was thrown at %s line %s.\n",
+            $this->getClass(),
+            $this->getLine()
+        );
+        
+        echo sprintf(
+            "Exception message: %s.\n",
+            $this->getMessage()
+        );
+    }
+    
+    /**
+     * Output the formatted stack trace.
+     */
+    private function outputStackTrace(): void {
         echo "Stack trace:\n";
         $trace = $this->getTrace();
 
         if (count($trace) === 0) {
             echo "(No Trace)\n";
-        } else {
-            $index = 0;
-
-            foreach ($trace as $entry) {
-                echo '#'.$index.' '.$entry."\n";
-                $index++;
-            }
+            return;
         }
+
+        foreach ($trace as $index => $entry) {
+            echo sprintf("#%d %s\n", $index, $entry);
+        }
+    }
+    
+    /**
+     * Output the closing HTML tag.
+     */
+    private function outputExceptionFooter(): void {
         echo '</pre>';
     }
 

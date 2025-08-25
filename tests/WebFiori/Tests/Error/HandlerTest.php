@@ -125,7 +125,7 @@ class HandlerTest extends TestCase {
         $output = ob_get_contents();
         ob_end_flush();
         $this->assertEquals("<pre>\n"
-                . "An exception was thrown at (Unknown Class) line (Unknown Line).\n"
+                . "An exception was thrown at X line (Unknown Line).\n"
                 . "Exception message: No Message.\n"
                 . "Stack trace:\n"
                 . "(No Trace)\n"

@@ -3,7 +3,37 @@ namespace WebFiori\Error;
 
 use Throwable;
 /**
- * This class is used to implement custom exception handler.
+ * Abstract base class for implementing custom exception handlers.
+ * 
+ * This class provides the foundation for creating custom exception handlers
+ * that can be registered with the Handler class. Each handler can:
+ * - Define its own priority for execution order
+ * - Choose whether to run during normal execution or shutdown
+ * - Access detailed exception information and stack traces
+ * - Implement custom handling logic
+ * 
+ * Usage Example:
+ * ```php
+ * class MyHandler extends AbstractHandler {
+ *     public function __construct() {
+ *         parent::__construct();
+ *         $this->setName('MyHandler');
+ *         $this->setPriority(10);
+ *     }
+ * 
+ *     public function handle(): void {
+ *         error_log('Exception: ' . $this->getMessage());
+ *     }
+ * 
+ *     public function isActive(): bool {
+ *         return true; // Always active
+ *     }
+ * 
+ *     public function isShutdownHandler(): bool {
+ *         return false; // Run during normal execution
+ *     }
+ * }
+ * ```
  *
  * @author Ibrahim
  */

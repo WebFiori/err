@@ -5,15 +5,34 @@ use Exception;
 use Throwable;
 /**
  * The core class which is used to define errors and exceptions handling.
+ * 
+ * This class provides a centralized error and exception handling system that:
+ * - Converts PHP errors to exceptions for consistent handling
+ * - Manages multiple exception handlers with priority-based execution
+ * - Supports both normal and shutdown handlers
+ * - Provides a singleton pattern for global access
+ * 
+ * Usage Example:
+ * ```php
+ * // Register a custom handler
+ * Handler::registerHandler(new MyCustomHandler());
+ * 
+ * // The handler will automatically catch and process errors/exceptions
+ * $undefinedVariable; // This will be caught and handled
+ * ```
  *
  * @author Ibrahim
  */
 class Handler {
     /**
-     * An array which holds one constant that is used to hold the meanings of different
-     * PHP errors.
+     * An array which holds constants that define the meanings of different PHP errors.
      * 
-     * This is used in converting errors to exceptions.
+     * This mapping is used when converting PHP errors to exceptions to provide
+     * meaningful error descriptions. Each error type includes:
+     * - 'type': The PHP error constant name
+     * - 'description': Human-readable description of the error
+     * 
+     * @var array<int, array{type: string, description: string}>
      */
     const ERR_TYPES = [
         E_ERROR => [
@@ -114,58 +133,161 @@ class Handler {
      */
     private $shutdownFunction;
     
+    /**
+     * Private constructor to enforce singleton pattern.
+     * 
+     * Initializes the error handling system by:
+     * - Setting up PHP error reporting
+     * - Creating error and exception handlers
+     * - Registering handlers with PHP
+     * - Adding the default handler
+     */
     private function __construct() {
-        ini_set('display_startup_errors', 1);
-        ini_set('display_errors', 1);
+        $this->initializeErrorReporting();
+        $this->createHandlers();
+        $this->registerPhpHandlers();
+        $this->initializeHandlerPool();
+    }
+    
+    /**
+     * Initialize PHP error reporting settings.
+     */
+    private function initializeErrorReporting(): void {
+        ini_set('display_startup_errors', '1');
+        ini_set('display_errors', '1');
         error_reporting(-1);
-        
-        $this->errToExceptionHandler = function (int $errno, string $errString, string $errFile, int $errLine) {
-            //Convert errors to exceptions
+        $this->isErrOccured = false;
+    }
+    
+    /**
+     * Create the error and exception handler functions.
+     */
+    private function createHandlers(): void {
+        $this->createErrorToExceptionHandler();
+        $this->createExceptionsHandler();
+        $this->createShutdownHandler();
+    }
+    
+    /**
+     * Create the error-to-exception conversion handler.
+     */
+    private function createErrorToExceptionHandler(): void {
+        $this->errToExceptionHandler = function (int $errno, string $errString, string $errFile, int $errLine): void {
             $errClass = TraceEntry::extractClassName($errFile);
-            $errType = Handler::ERR_TYPES[$errno] ?? ['type' => 'UNKNOWN', 'description' => 'Unknown error'];
-            $message = 'An exception caused by an error. '.$errType['description'].': '.$errString.' at '.$errClass.' Line '.$errLine;
+            $errType = self::ERR_TYPES[$errno] ?? ['type' => 'UNKNOWN', 'description' => 'Unknown error'];
+            $message = sprintf(
+                'An exception caused by an error. %s: %s at %s Line %d',
+                $errType['description'],
+                $errString,
+                $errClass,
+                $errLine
+            );
             throw new ErrorHandlerException($message, $errno, $errFile, $errLine);
         };
-        
-        $this->exceptionsHandler = function (?Throwable $ex = null) {
-            Handler::get()->lastException = $ex;
-            Handler::get()->sortHandlers();
-            foreach (Handler::get()->handlersPool as $h) {
-                if ($h->isActive() && !$h->isShutdownHandler()) {
-                    if ($ex instanceof Throwable) {
-                        $h->setException($ex);
-                    }
-                    $h->setIsExecuting(true);
-                    $h->handle();
-                    $h->setIsExecuting(false);
-                    $h->setIsExecuted(true);
+    }
+    
+    /**
+     * Create the main exceptions handler.
+     */
+    private function createExceptionsHandler(): void {
+        $this->exceptionsHandler = function (?Throwable $ex = null): void {
+            $instance = self::get();
+            $instance->lastException = $ex;
+            $instance->sortHandlers();
+            
+            foreach ($instance->handlersPool as $handler) {
+                if ($handler->isActive() && !$handler->isShutdownHandler()) {
+                    $this->executeHandler($handler, $ex);
                 }
             }
         };
-        
-        $this->shutdownFunction = function () {
-            $lastException = Handler::get()->lastException;
-            if ($lastException !== null) {
-                if (ob_get_length()) {
-                    ob_clean();
-                }
-
-                foreach (Handler::get()->handlersPool as $h) {
-                    if ($h->isActive() && $h->isShutdownHandler() && !$h->isExecuted() && !$h->isExecuting()) {
-                        if ($lastException instanceof Throwable) {
-                            $h->setException($lastException);
-                        }
-                        $h->handle();
-                        $h->setIsExecuted(true);
-                    }
+    }
+    
+    /**
+     * Create the shutdown handler for handling errors after script execution.
+     */
+    private function createShutdownHandler(): void {
+        $this->shutdownFunction = function (): void {
+            $instance = self::get();
+            $lastException = $instance->lastException;
+            
+            if ($lastException === null) {
+                return;
+            }
+            
+            $this->cleanOutputBuffer();
+            
+            foreach ($instance->handlersPool as $handler) {
+                if ($this->shouldExecuteShutdownHandler($handler)) {
+                    $this->executeHandler($handler, $lastException);
                 }
             }
         };
+    }
+    
+    /**
+     * Execute a single handler with proper state management.
+     * 
+     * @param AbstractHandler $handler The handler to execute
+     * @param Throwable|null $exception The exception to handle
+     */
+    private function executeHandler(AbstractHandler $handler, ?Throwable $exception): void {
+        if ($exception instanceof Throwable) {
+            $handler->setException($exception);
+        }
         
-        $this->isErrOccured = false;
+        $handler->setIsExecuting(true);
+        
+        try {
+            $handler->handle();
+        } catch (Throwable $handlerException) {
+            // Prevent infinite loops - log handler failures
+            error_log(sprintf(
+                'Handler "%s" failed: %s',
+                $handler->getName(),
+                $handlerException->getMessage()
+            ));
+        } finally {
+            $handler->setIsExecuting(false);
+            $handler->setIsExecuted(true);
+        }
+    }
+    
+    /**
+     * Clean the output buffer if it contains data.
+     */
+    private function cleanOutputBuffer(): void {
+        if (ob_get_length() > 0) {
+            ob_clean();
+        }
+    }
+    
+    /**
+     * Check if a shutdown handler should be executed.
+     * 
+     * @param AbstractHandler $handler The handler to check
+     * @return bool True if the handler should be executed
+     */
+    private function shouldExecuteShutdownHandler(AbstractHandler $handler): bool {
+        return $handler->isActive() 
+            && $handler->isShutdownHandler() 
+            && !$handler->isExecuted() 
+            && !$handler->isExecuting();
+    }
+    
+    /**
+     * Register handlers with PHP's error handling system.
+     */
+    private function registerPhpHandlers(): void {
         set_error_handler($this->errToExceptionHandler);
         set_exception_handler($this->exceptionsHandler);
         register_shutdown_function($this->shutdownFunction);
+    }
+    
+    /**
+     * Initialize the handler pool with the default handler.
+     */
+    private function initializeHandlerPool(): void {
         $this->handlersPool = [];
         $this->handlersPool[] = new DefaultHandler();
     }
@@ -282,9 +404,25 @@ class Handler {
     }
     
     /**
-     * Sets a custom handler to handle exceptions.
+     * Registers a custom handler to handle exceptions and errors.
+     * 
+     * The handler will be added to the handler pool if no handler with the same
+     * name already exists. Handlers are executed based on their priority,
+     * with higher priority handlers executing first.
+     * 
+     * Example:
+     * ```php
+     * $handler = new MyCustomHandler();
+     * $handler->setPriority(100);
+     * Handler::registerHandler($handler);
+     * ```
      * 
      * @param AbstractHandler $h A class that implements a custom handler.
+     * 
+     * @throws InvalidArgumentException If handler name is empty or invalid
+     * 
+     * @see AbstractHandler For implementing custom handlers
+     * @see unregisterHandler() For removing handlers
      */
     public static function registerHandler(AbstractHandler $h): void {
         if (!self::hasHandler($h->getName())) {
@@ -293,25 +431,52 @@ class Handler {
     }
     
     /**
-     * Remove a registered errors handler using its name or namespace.
+     * Remove a registered errors handler using its name or class name.
      * 
-     * @param string $h The name of the handler. Also, this can be the namespace
-     * of the handler obtained using the syntax Clazz::class.
+     * This method can remove handlers by:
+     * 1. Handler name (as set by setName())
+     * 2. Full class name (using ClassName::class syntax)
+     * 
+     * Example:
+     * ```php
+     * // Remove by name
+     * Handler::unregisterHandlerByName('MyHandler');
+     * 
+     * // Remove by class name
+     * Handler::unregisterHandlerByName(MyCustomHandler::class);
+     * ```
+     * 
+     * @param string $identifier The name or class name of the handler to remove
+     * 
+     * @return bool True if a handler was removed, false otherwise
      */
-    public static function unregisterHandlerByName(string $h): bool {
-        $handler = self::getHandler($h);
+    public static function unregisterHandlerByName(string $identifier): bool {
+        $trimmedIdentifier = trim($identifier);
+        
+        // First, try to find by handler name
+        $handler = self::getHandler($trimmedIdentifier);
         if ($handler !== null) {
             return self::unregisterHandler($handler);
         }
         
-        // Improved logic: avoid creating instances unnecessarily
-        if (!class_exists($h)) {
+        // If not found by name, try to find by class name
+        return self::unregisterHandlerByClassName($trimmedIdentifier);
+    }
+    
+    /**
+     * Remove a handler by its class name.
+     * 
+     * @param string $className The full class name of the handler
+     * 
+     * @return bool True if a handler was removed, false otherwise
+     */
+    private static function unregisterHandlerByClassName(string $className): bool {
+        if (!class_exists($className)) {
             return false;
         }
         
-        // Find handler by class name instead of creating instance
         foreach (self::get()->handlersPool as $existingHandler) {
-            if (get_class($existingHandler) === $h) {
+            if (get_class($existingHandler) === $className) {
                 return self::unregisterHandler($existingHandler);
             }
         }

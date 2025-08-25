@@ -12,6 +12,7 @@ use WebFiori\Error\Handler;
  * @author Ibrahim
  */
 class ConfigurationTest extends TestCase {
+    use OutputBufferingTrait;
     
     /**
      * @var array<string, mixed> Original PHP settings backup
@@ -30,6 +31,9 @@ class ConfigurationTest extends TestCase {
     }
     
     protected function tearDown(): void {
+        // Clean up output buffers first
+        $this->cleanupOutputBuffers();
+        
         // Restore original PHP settings
         error_reporting($this->originalSettings['error_reporting']);
         ini_set('display_errors', $this->originalSettings['display_errors']);

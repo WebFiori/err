@@ -15,8 +15,14 @@ use Throwable;
  * @author Ibrahim
  */
 class ErrorHandlingTest extends TestCase {
+    use OutputBufferingTrait;
     
     protected function setUp(): void {
+        Handler::reset();
+    }
+    
+    protected function tearDown(): void {
+        $this->cleanupOutputBuffers();
         Handler::reset();
     }
     
@@ -53,9 +59,9 @@ class ErrorHandlingTest extends TestCase {
         ini_set('error_log', $tempLogFile);
         
         // This should not throw an exception, but log the handler failure
-        ob_start();
-        Handler::get()->invokeExceptionsHandler(new Exception('Test exception'));
-        ob_end_clean();
+        $this->captureOutput(function() {
+            Handler::get()->invokeExceptionsHandler(new Exception('Test exception'));
+        });
         
         // Restore original error log setting
         ini_set('error_log', $originalErrorLog);
@@ -125,9 +131,9 @@ class ErrorHandlingTest extends TestCase {
         Handler::registerHandler($handler1);
         Handler::registerHandler($handler2);
         
-        ob_start();
-        Handler::get()->invokeExceptionsHandler(new Exception('Test'));
-        ob_end_clean();
+        $this->captureOutput(function() {
+            Handler::get()->invokeExceptionsHandler(new Exception('Test'));
+        });
         
         // Handler2 should execute first due to higher priority
         $this->assertEquals(['Handler2', 'Handler1'], $executionOrder);

@@ -13,8 +13,14 @@ use Exception;
  * @author Ibrahim
  */
 class InfiniteLoopProtectionTest extends TestCase {
+    use OutputBufferingTrait;
     
     protected function setUp(): void {
+        Handler::reset();
+    }
+    
+    protected function tearDown(): void {
+        $this->cleanupOutputBuffers();
         Handler::reset();
     }
     
@@ -59,9 +65,9 @@ class InfiniteLoopProtectionTest extends TestCase {
         ini_set('error_log', $tempLogFile);
         
         // Trigger the handler
-        ob_start();
-        Handler::get()->invokeExceptionsHandler(new Exception('Test exception'));
-        ob_end_clean();
+        $this->captureOutput(function() {
+            Handler::get()->invokeExceptionsHandler(new Exception('Test exception'));
+        });
         
         // Restore original error log setting
         ini_set('error_log', $originalErrorLog);
@@ -111,9 +117,11 @@ class InfiniteLoopProtectionTest extends TestCase {
         Handler::registerHandler($countingHandler);
         
         // Execute the handler multiple times
-        for ($i = 0; $i < 5; $i++) {
-            Handler::get()->invokeExceptionsHandler(new Exception('Test exception ' . $i));
-        }
+        $this->captureOutput(function() {
+            for ($i = 0; $i < 5; $i++) {
+                Handler::get()->invokeExceptionsHandler(new Exception('Test exception ' . $i));
+            }
+        });
         
         // Should only execute up to the limit (default is 3)
         $this->assertEquals(3, $executionCount);
@@ -153,9 +161,11 @@ class InfiniteLoopProtectionTest extends TestCase {
         Handler::registerHandler($testHandler);
         
         // Execute up to limit
-        for ($i = 0; $i < 3; $i++) {
-            Handler::get()->invokeExceptionsHandler(new Exception('Test exception ' . $i));
-        }
+        $this->captureOutput(function() {
+            for ($i = 0; $i < 3; $i++) {
+                Handler::get()->invokeExceptionsHandler(new Exception('Test exception ' . $i));
+            }
+        });
         
         $this->assertEquals(3, $executionCount);
         $this->assertEquals(3, Handler::getHandlerExecutionCount('TestHandler'));
@@ -165,7 +175,9 @@ class InfiniteLoopProtectionTest extends TestCase {
         $this->assertEquals(0, Handler::getHandlerExecutionCount('TestHandler'));
         
         // Should be able to execute again
-        Handler::get()->invokeExceptionsHandler(new Exception('After reset'));
+        $this->captureOutput(function() {
+            Handler::get()->invokeExceptionsHandler(new Exception('After reset'));
+        });
         $this->assertEquals(4, $executionCount);
         $this->assertEquals(1, Handler::getHandlerExecutionCount('TestHandler'));
     }
@@ -206,9 +218,11 @@ class InfiniteLoopProtectionTest extends TestCase {
         Handler::setMaxHandlerExecutions(5);
         
         // Execute multiple times
-        for ($i = 0; $i < 7; $i++) {
-            Handler::get()->invokeExceptionsHandler(new Exception('Test exception ' . $i));
-        }
+        $this->captureOutput(function() {
+            for ($i = 0; $i < 7; $i++) {
+                Handler::get()->invokeExceptionsHandler(new Exception('Test exception ' . $i));
+            }
+        });
         
         // Should execute up to the new limit (5)
         $this->assertEquals(5, $executionCount);
@@ -256,9 +270,9 @@ class InfiniteLoopProtectionTest extends TestCase {
         ini_set('error_log', $tempLogFile);
         
         // Trigger the handler
-        ob_start();
-        Handler::get()->invokeExceptionsHandler(new Exception('Initial exception'));
-        ob_end_clean();
+        $this->captureOutput(function() {
+            Handler::get()->invokeExceptionsHandler(new Exception('Initial exception'));
+        });
         
         // Restore original error log setting
         ini_set('error_log', $originalErrorLog);

@@ -17,8 +17,14 @@ use Exception;
  * @author Ibrahim
  */
 class SecurityTest extends TestCase {
+    use OutputBufferingTrait;
     
     protected function setUp(): void {
+        Handler::reset();
+    }
+    
+    protected function tearDown(): void {
+        $this->cleanupOutputBuffers();
         Handler::reset();
     }
     
@@ -186,17 +192,16 @@ class SecurityTest extends TestCase {
             public function isShutdownHandler(): bool { return false; }
             
             // Override security config to force production mode
-            protected function createSecurityConfig(): SecurityConfig {
+            public function createSecurityConfig(): SecurityConfig {
                 return new SecurityConfig(SecurityConfig::LEVEL_PROD);
             }
         };
         
         Handler::registerHandler($prodHandler);
         
-        ob_start();
-        Handler::get()->invokeExceptionsHandler(new Exception('Test exception'));
-        $output = ob_get_contents();
-        ob_end_clean();
+        $output = $this->captureOutput(function() {
+            Handler::get()->invokeExceptionsHandler(new Exception('Test exception'));
+        });
         
         $this->assertStringContainsString('Exception access blocked for security', $output);
         $this->assertStringNotContainsString('Security breach', $output);
@@ -267,10 +272,9 @@ class SecurityTest extends TestCase {
         
         Handler::registerHandler($failingHandler);
         
-        ob_start();
-        Handler::get()->invokeExceptionsHandler(new Exception('Original exception'));
-        $output = ob_get_contents();
-        ob_end_clean();
+        $output = $this->captureOutput(function() {
+            Handler::get()->invokeExceptionsHandler(new Exception('Original exception'));
+        });
         
         // Should show fallback message, not crash
         $this->assertStringContainsString('Original exception', $output);

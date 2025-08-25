@@ -14,8 +14,14 @@ use Exception;
  * @author Ibrahim
  */
 class MemoryManagementTest extends TestCase {
+    use OutputBufferingTrait;
     
     protected function setUp(): void {
+        Handler::reset();
+    }
+    
+    protected function tearDown(): void {
+        $this->cleanupOutputBuffers();
         Handler::reset();
     }
     
@@ -55,9 +61,11 @@ class MemoryManagementTest extends TestCase {
         }
         
         // Trigger some exceptions to create execution counters
-        for ($i = 0; $i < 5; $i++) {
-            Handler::get()->invokeExceptionsHandler(new Exception('Test exception ' . $i));
-        }
+        $this->captureOutput(function() {
+            for ($i = 0; $i < 5; $i++) {
+                Handler::get()->invokeExceptionsHandler(new Exception('Test exception ' . $i));
+            }
+        });
         
         $beforeCleanup = memory_get_usage();
         $statsBefore = Handler::getMemoryStats();
@@ -101,7 +109,9 @@ class MemoryManagementTest extends TestCase {
         Handler::registerHandler($handler);
         
         // Trigger exception to set up state
-        Handler::get()->invokeExceptionsHandler(new Exception('Test exception'));
+        $this->captureOutput(function() {
+            Handler::get()->invokeExceptionsHandler(new Exception('Test exception'));
+        });
         
         // Check handler has state
         $memoryUsage = $handler->getMemoryUsage();
@@ -227,7 +237,9 @@ class MemoryManagementTest extends TestCase {
         }
         
         // Trigger some exceptions
-        Handler::get()->invokeExceptionsHandler(new Exception('Test exception'));
+        $this->captureOutput(function() {
+            Handler::get()->invokeExceptionsHandler(new Exception('Test exception'));
+        });
         
         $statsBefore = Handler::getMemoryStats();
         $this->assertGreaterThan(0, $statsBefore['handler_count']);
@@ -282,7 +294,9 @@ class MemoryManagementTest extends TestCase {
         }
         
         // Trigger exception handling
-        Handler::get()->invokeExceptionsHandler(new Exception('Performance test'));
+        $this->captureOutput(function() {
+            Handler::get()->invokeExceptionsHandler(new Exception('Performance test'));
+        });
         
         $endTime = microtime(true);
         $endMemory = memory_get_usage();
@@ -329,7 +343,9 @@ class MemoryManagementTest extends TestCase {
         Handler::registerHandler($handler);
         
         // Trigger exception to create execution counter
-        Handler::get()->invokeExceptionsHandler(new Exception('Test exception'));
+        $this->captureOutput(function() {
+            Handler::get()->invokeExceptionsHandler(new Exception('Test exception'));
+        });
         
         $this->assertEquals(1, Handler::getHandlerExecutionCount('ThresholdTestHandler'));
         

@@ -1,15 +1,15 @@
 <?php
 
-namespace webfiori\tests\error;
+namespace WebFiori\Tests\Error;
 
 require_once 'SampleHandler1.php';
 require_once 'SampleHandler2.php';
 require_once 'SampleHandler3.php';
 
 use PHPUnit\Framework\TestCase;
-use webfiori\error\DefaultHandler;
-use webfiori\error\ErrorHandlerException;
-use webfiori\error\Handler;
+use WebFiori\Error\DefaultHandler;
+use WebFiori\Error\ErrorHandlerException;
+use WebFiori\Error\Handler;
 use const SampleHandler3;
 /**
  * Description of HandlerTest

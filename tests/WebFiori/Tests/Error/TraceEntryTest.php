@@ -1,8 +1,8 @@
 <?php
-namespace webfiori\tests\error;
+namespace WebFiori\Tests\Error;
 
 use PHPUnit\Framework\TestCase;
-use webfiori\error\TraceEntry;
+use WebFiori\Error\TraceEntry;
 /**
  * Description of TraceEntryTest
  *

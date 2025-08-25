@@ -1,9 +1,9 @@
 <?php
 
 
-namespace webfiori\tests\error;
+namespace WebFiori\Tests\Error;
 
-use webfiori\error\AbstractHandler;
+use WebFiori\Error\AbstractHandler;
 
 class SampleHandler3 extends AbstractHandler {
     public function __construct() {

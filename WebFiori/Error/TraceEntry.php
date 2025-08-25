@@ -1,5 +1,5 @@
 <?php
-namespace webfiori\error;
+namespace WebFiori\Error;
 
 /**
  * A class which is used to represent an entry in exception stack trace or 

@@ -1,5 +1,5 @@
 <?php
-namespace webfiori\error;
+namespace WebFiori\Error;
 
 use ErrorException;
 /**

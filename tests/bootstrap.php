@@ -18,12 +18,7 @@ if (explode($DS, $rootDirTrimmed)[0] == 'home') {
 define('ROOT_DIR', $rootDir);
 const DS = DIRECTORY_SEPARATOR;
 echo 'Root Directory: \''.$rootDir.'\'.'."\n";
-$classesPath = $rootDir.'webfiori'.DS.'error'.DS;
+$classesPath = $rootDir.'../vendor/autoload.php';
 
-require_once $classesPath . 'ErrorHandlerException.php';
-require_once $classesPath . 'AbstractHandler.php';
-require_once $classesPath . 'DefaultHandler.php';
-require_once $classesPath . 'TraceEntry.php';
-require_once $classesPath . 'Handler.php';
 
 

@@ -41,7 +41,7 @@ First step in setting a custom exceptions handler is to implement one. Implement
 
 ``` php
 <?php
-namespace webfiori\error;
+namespace WebFiori\Error;
 
 class DefaultExceptionsHandler extends AbstractExceptionHandler {
     public function __construct() {

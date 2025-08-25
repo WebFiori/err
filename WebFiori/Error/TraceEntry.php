@@ -47,6 +47,11 @@ class TraceEntry {
     private string $method;
     
     /**
+     * @var ?string Cached string representation to avoid repeated computation
+     */
+    private ?string $cachedString = null;
+    
+    /**
      * Creates new instance of the class.
      * 
      * @param array<string, mixed> $debugTraceEntry An associative array that holds trace entry information.
@@ -132,7 +137,13 @@ class TraceEntry {
      * @return string A formatted string describing the trace entry location
      */
     public function __toString(): string {
-        return $this->formatTraceEntry();
+        // Use cached version if available
+        if ($this->cachedString !== null) {
+            return $this->cachedString;
+        }
+        
+        $this->cachedString = $this->formatTraceEntry();
+        return $this->cachedString;
     }
     
     /**
@@ -255,5 +266,25 @@ class TraceEntry {
      */
     public function getMethod(): string {
         return $this->method;
+    }
+    
+    /**
+     * Clear cached data to free memory.
+     */
+    public function clearCache(): void {
+        $this->cachedString = null;
+    }
+    
+    /**
+     * Get memory usage of this trace entry.
+     * 
+     * @return int Approximate memory usage in bytes
+     */
+    public function getMemoryUsage(): int {
+        $size = strlen($this->class) + strlen($this->file) + strlen($this->line) + strlen($this->method);
+        if ($this->cachedString !== null) {
+            $size += strlen($this->cachedString);
+        }
+        return $size;
     }
 }

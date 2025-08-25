@@ -109,6 +109,31 @@ class Handler {
     private static ?Handler $inst = null;
     
     /**
+     * @var array<string, int> Track handler execution count to prevent infinite loops
+     */
+    private static array $handlerExecutionCount = [];
+    
+    /**
+     * @var int Maximum number of times a handler can be executed in a single request
+     */
+    private static int $maxHandlerExecutions = 3;
+    
+    /**
+     * @var bool Flag to prevent recursive handler execution
+     */
+    private static bool $isHandlingException = false;
+    
+    /**
+     * @var array<string, WeakReference> Weak references to handlers to prevent memory leaks
+     */
+    private static array $handlerWeakRefs = [];
+    
+    /**
+     * @var int Memory usage threshold for cleanup (in bytes)
+     */
+    private static int $memoryThreshold = 50 * 1024 * 1024; // 50MB
+    
+    /**
      * @var bool
      */
     private bool $isErrOccured;
@@ -226,17 +251,41 @@ class Handler {
     }
     
     /**
-     * Execute a single handler with proper state management and protection.
+     * Execute a single handler with proper state management and infinite loop protection.
      * 
      * @param AbstractHandler $handler The handler to execute
      * @param Throwable|null $exception The exception to handle
      */
     private function executeHandler(AbstractHandler $handler, ?Throwable $exception): void {
+        $handlerName = $handler->getName();
+        
+        // Check for infinite loop protection
+        if (self::$isHandlingException) {
+            error_log("Handler execution blocked: Already handling an exception to prevent infinite loop");
+            return;
+        }
+        
+        // Check execution count limit
+        if (!isset(self::$handlerExecutionCount[$handlerName])) {
+            self::$handlerExecutionCount[$handlerName] = 0;
+        }
+        
+        if (self::$handlerExecutionCount[$handlerName] >= self::$maxHandlerExecutions) {
+            error_log("Handler '{$handlerName}' execution blocked: Maximum execution limit (" . self::$maxHandlerExecutions . ") reached");
+            return;
+        }
+        
+        // Increment execution count
+        self::$handlerExecutionCount[$handlerName]++;
+        
         if ($exception instanceof Throwable) {
             $handler->setException($exception);
         }
         
         $handler->setIsExecuting(true);
+        
+        // Set flag to prevent recursive execution
+        self::$isHandlingException = true;
         
         try {
             // Execute the handler
@@ -244,17 +293,17 @@ class Handler {
             
         } catch (Throwable $handlerException) {
             // Log handler failures
-            $handler->secureLog('Handler execution failed', [
-                'handler' => $handler->getName(),
-                'error' => $handlerException->getMessage()
-            ]);
+            $this->logHandlerFailure($handler, $handlerException);
             
-            // Fallback to default behavior
-            $handler->handleSecurityFallback($handlerException);
+            // Fallback to default behavior (but don't trigger another handler)
+            $this->handleFailureFallback($handlerException);
             
         } finally {
             $handler->setIsExecuting(false);
             $handler->setIsExecuted(true);
+            
+            // Reset flag to allow future handler execution
+            self::$isHandlingException = false;
         }
     }
     
@@ -342,6 +391,10 @@ class Handler {
         $h->handlersPool[] = new DefaultHandler();
         $h->lastException = null;
         set_error_handler($h->errToExceptionHandler);
+        
+        // Reset infinite loop protection
+        self::$handlerExecutionCount = [];
+        self::$isHandlingException = false;
     }
     
     /**
@@ -502,11 +555,162 @@ class Handler {
             if ($handler->getName() !== $h->getName()) {
                 $tempPool[] = $handler;
             } else {
+                // Clean up the handler before removing it (but avoid null assignments)
+                $handler->cleanup();
                 $removed = true;
             }
         }
         self::get()->handlersPool = $tempPool;
 
+        // Clean up execution count for removed handler
+        unset(self::$handlerExecutionCount[$h->getName()]);
+        
+        // Trigger memory cleanup if needed
+        if (memory_get_usage() > self::$memoryThreshold * 0.8) {
+            self::cleanupMemory();
+        }
+
         return $removed;
+    }
+    
+    /**
+     * Log handler failure safely without triggering another handler.
+     * 
+     * @param AbstractHandler $handler The handler that failed
+     * @param Throwable $exception The exception that caused the failure
+     */
+    private function logHandlerFailure(AbstractHandler $handler, Throwable $exception): void {
+        // Use basic error_log to avoid triggering another handler
+        $logMessage = sprintf(
+            'Handler "%s" failed: %s in %s:%d',
+            $handler->getName(),
+            $exception->getMessage(),
+            $exception->getFile(),
+            $exception->getLine()
+        );
+        
+        error_log($logMessage);
+    }
+    
+    /**
+     * Handle failure fallback without triggering handlers.
+     * 
+     * @param Throwable $exception The exception that caused the failure
+     */
+    private function handleFailureFallback(Throwable $exception): void {
+        // Simple, safe error output that won't trigger handlers
+        if (php_sapi_name() === 'cli') {
+            fprintf(STDERR, "Error Handler Failed: %s\n", $exception->getMessage());
+        } else {
+            // For web requests, output minimal safe HTML
+            echo '<p>An error occurred in the error handler. Please check the error logs.</p>';
+        }
+    }
+    
+    /**
+     * Reset handler execution counts (useful for long-running processes).
+     */
+    public static function resetExecutionCounts(): void {
+        self::$handlerExecutionCount = [];
+    }
+    
+    /**
+     * Set the maximum number of executions allowed per handler.
+     * 
+     * @param int $max Maximum executions (must be > 0)
+     */
+    public static function setMaxHandlerExecutions(int $max): void {
+        if ($max > 0) {
+            self::$maxHandlerExecutions = $max;
+        }
+    }
+    
+    /**
+     * Get current execution count for a handler.
+     * 
+     * @param string $handlerName Name of the handler
+     * @return int Current execution count
+     */
+    public static function getHandlerExecutionCount(string $handlerName): int {
+        return self::$handlerExecutionCount[$handlerName] ?? 0;
+    }
+    
+    /**
+     * Clean up memory by removing unused handler references and resetting counters.
+     * Should be called periodically in long-running processes.
+     */
+    public static function cleanupMemory(): void {
+        // Clean up execution counters for handlers that no longer exist
+        $activeHandlerNames = [];
+        foreach (self::get()->handlersPool as $handler) {
+            $activeHandlerNames[] = $handler->getName();
+        }
+        
+        // Remove execution counts for non-existent handlers
+        self::$handlerExecutionCount = array_intersect_key(
+            self::$handlerExecutionCount,
+            array_flip($activeHandlerNames)
+        );
+        
+        // Clean up weak references
+        self::$handlerWeakRefs = array_filter(self::$handlerWeakRefs, function($weakRef) {
+            return $weakRef->get() !== null;
+        });
+        
+        // Force garbage collection if memory usage is high
+        if (memory_get_usage() > self::$memoryThreshold) {
+            gc_collect_cycles();
+        }
+    }
+    
+    /**
+     * Get memory usage statistics.
+     * 
+     * @return array<string, mixed> Memory usage information
+     */
+    public static function getMemoryStats(): array {
+        return [
+            'current_usage' => memory_get_usage(true),
+            'peak_usage' => memory_get_peak_usage(true),
+            'handler_count' => count(self::get()->handlersPool),
+            'execution_counters' => count(self::$handlerExecutionCount),
+            'weak_references' => count(self::$handlerWeakRefs),
+            'threshold' => self::$memoryThreshold
+        ];
+    }
+    
+    /**
+     * Set memory threshold for automatic cleanup.
+     * 
+     * @param int $bytes Memory threshold in bytes
+     */
+    public static function setMemoryThreshold(int $bytes): void {
+        if ($bytes > 0) {
+            self::$memoryThreshold = $bytes;
+        }
+    }
+    
+    /**
+     * Remove all handlers and clean up memory completely.
+     * Use with caution - this will remove all error handling.
+     */
+    public static function shutdown(): void {
+        $instance = self::$inst;
+        if ($instance !== null) {
+            // Clean up all handlers (but don't call cleanup() to avoid null assignment issues)
+            $instance->handlersPool = [];
+            $instance->lastException = null;
+            
+            // Clean up static data
+            self::$handlerExecutionCount = [];
+            self::$handlerWeakRefs = [];
+            self::$isHandlingException = false;
+            
+            // Restore original error handler
+            restore_error_handler();
+            
+            // Force garbage collection
+            gc_collect_cycles();
+        }
     }
 }

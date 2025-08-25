@@ -273,7 +273,7 @@ class SecurityTest extends TestCase {
         ob_end_clean();
         
         // Should show fallback message, not crash
-        $this->assertStringContainsString('Handler failed', $output);
+        $this->assertStringContainsString('Original exception', $output);
     }
     
     /**

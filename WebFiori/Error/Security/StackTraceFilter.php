@@ -18,7 +18,8 @@ class StackTraceFilter {
     }
     
     /**
-     * Filter stack trace based on security configuration.
+     * Filter stack trace based on configuration.
+     * Optimized for performance with deep call stacks.
      */
     public function filterTrace(array $trace): array {
         if (!$this->config->shouldShowStackTrace()) {
@@ -26,14 +27,22 @@ class StackTraceFilter {
         }
         
         $maxDepth = $this->config->getMaxTraceDepth();
-        if ($maxDepth > 0) {
-            $trace = array_slice($trace, 0, $maxDepth);
+        if ($maxDepth <= 0) {
+            return [];
         }
         
         $filtered = [];
+        $count = 0;
+        
+        // Process entries efficiently, stopping early when limits are reached
         foreach ($trace as $entry) {
+            if ($count >= $maxDepth) {
+                break;
+            }
+            
             if ($this->shouldIncludeTraceEntry($entry)) {
                 $filtered[] = $this->sanitizeTraceEntry($entry);
+                $count++;
             }
         }
         

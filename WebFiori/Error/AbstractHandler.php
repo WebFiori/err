@@ -411,6 +411,50 @@ abstract class AbstractHandler {
     }
     
     /**
+     * Clean up handler resources to prevent memory leaks.
+     * Called when handler is removed or system is shutting down.
+     */
+    public function cleanup(): void {
+        // Clear exception reference
+        $this->exception = null;
+        
+        // Reset execution state
+        $this->isCalled = false;
+        $this->isExecuting = false;
+        
+        // Note: We cannot set typed properties to null in PHP 7.4+
+        // Instead, we'll let the garbage collector handle cleanup
+        // when the handler object is destroyed
+    }
+    
+    /**
+     * Get memory usage for this handler.
+     * 
+     * @return array<string, mixed> Memory usage information
+     */
+    public function getMemoryUsage(): array {
+        $usage = [
+            'handler_name' => $this->getName(),
+            'has_exception' => $this->exception !== null,
+            'is_executed' => $this->isCalled,
+            'is_executing' => $this->isExecuting,
+            'security_components' => [
+                'security_config' => isset($this->security),
+                'path_sanitizer' => isset($this->pathSanitizer),
+                'trace_filter' => isset($this->traceFilter),
+                'output_sanitizer' => isset($this->outputSanitizer),
+                'monitor' => isset($this->monitor)
+            ]
+        ];
+        
+        if ($this->exception !== null) {
+            $usage['exception_size'] = strlen(serialize($this->exception));
+        }
+        
+        return $usage;
+    }
+    
+    /**
      * Sets the trace array based on the current exception.
      */
     private function setTrace(): void {

@@ -18,7 +18,14 @@ if (explode($DS, $rootDirTrimmed)[0] == 'home') {
 define('ROOT_DIR', $rootDir);
 const DS = DIRECTORY_SEPARATOR;
 echo 'Root Directory: \''.$rootDir.'\'.'."\n";
-$classesPath = $rootDir.'../vendor/autoload.php';
+$classesPath = $rootDir.'vendor/autoload.php';
+
+if (file_exists($classesPath)) {
+    require_once $classesPath;
+} else {
+    echo "Autoloader not found at: $classesPath\n";
+    exit(1);
+}
 
 
 

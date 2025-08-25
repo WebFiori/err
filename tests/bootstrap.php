@@ -3,6 +3,7 @@
 ini_set('display_startup_errors', 1);
 ini_set('display_errors', 1);
 error_reporting(-1);
+
 $testsDirName = 'tests';
 $rootDir = substr(__DIR__, 0, strlen(__DIR__) - strlen($testsDirName));
 $DS = DIRECTORY_SEPARATOR;
@@ -27,5 +28,12 @@ if (file_exists($classesPath)) {
     exit(1);
 }
 
+// Suppress error_log output during tests by redirecting to /dev/null
+$originalErrorLog = ini_get('error_log');
+ini_set('error_log', '/dev/null');
 
-
+// Register a shutdown function to clean up
+register_shutdown_function(function() use ($originalErrorLog) {
+    // Restore original error log setting
+    ini_set('error_log', $originalErrorLog);
+});

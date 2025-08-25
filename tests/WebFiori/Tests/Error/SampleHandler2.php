@@ -1,6 +1,5 @@
 <?php
 
-
 namespace WebFiori\Tests\Error;
 
 use WebFiori\Error\AbstractHandler;
@@ -11,6 +10,7 @@ class SampleHandler2 extends AbstractHandler {
         $this->setPriority(44);
         $this->setName('H2');
     }
+    
     public function handle(): void {
        !defined('SampleHandler2') ? define('SampleHandler2', 'Yes') : '';
     }

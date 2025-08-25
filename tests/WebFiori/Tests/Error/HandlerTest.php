@@ -124,12 +124,8 @@ class HandlerTest extends TestCase {
         Handler::get()->invokeExceptionsHandler();
         $output = ob_get_contents();
         ob_end_flush();
-        $this->assertEquals("<pre>\n"
-                . "An exception was thrown at X line (Unknown Line).\n"
-                . "Exception message: No Message.\n"
-                . "Stack trace:\n"
-                . "(No Trace)\n"
-                . "</pre>", $output);
+        $this->assertStringContainsString('Application Error', $output);
+        $this->assertStringContainsString('Unknown line (Unknown Line)', $output);
     }
     public function testHandel01() {
         ob_start();
@@ -137,9 +133,8 @@ class HandlerTest extends TestCase {
         Handler::get()->invokeExceptionsHandler(new \Exception("Test Exc", 33));
         $output = ob_get_contents();
         ob_end_flush();
-        $this->assertEquals("<pre>\n"
-                . "An exception was thrown at HandlerTest line 137.\n"
-                . "Exception message: Test Exc.\n"
-                . "Stack trace:\n", substr($output, 0, 97));
+        $this->assertStringContainsString('Application Error', $output);
+        $this->assertStringContainsString('HandlerTest line 133', $output);
+        $this->assertStringContainsString('Test Exc', $output);
     }
 }

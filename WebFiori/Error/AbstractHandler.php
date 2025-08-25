@@ -2,15 +2,24 @@
 namespace WebFiori\Error;
 
 use Throwable;
+use WebFiori\Error\Security\SecurityConfig;
+use WebFiori\Error\Security\PathSanitizer;
+use WebFiori\Error\Security\StackTraceFilter;
+use WebFiori\Error\Security\OutputSanitizer;
+use WebFiori\Error\Security\SecurityMonitor;
+
 /**
- * Abstract base class for implementing custom exception handlers.
+ * Abstract base class for implementing custom exception handlers with built-in security.
  * 
  * This class provides the foundation for creating custom exception handlers
  * that can be registered with the Handler class. Each handler can:
  * - Define its own priority for execution order
  * - Choose whether to run during normal execution or shutdown
- * - Access detailed exception information and stack traces
- * - Implement custom handling logic
+ * - Access detailed exception information and stack traces (filtered based on environment)
+ * - Implement custom handling logic with automatic processing
+ * 
+ * All data access methods automatically apply filtering based on the
+ * current environment (development, staging, production).
  * 
  * Usage Example:
  * ```php
@@ -22,15 +31,19 @@ use Throwable;
  *     }
  * 
  *     public function handle(): void {
- *         error_log('Exception: ' . $this->getMessage());
+ *         // All output is automatically processed
+ *         $this->secureOutput('<div class="error">');
+ *         $this->secureOutput('Error in: ' . $this->getClass());
+ *         $this->secureOutput('Message: ' . $this->getMessage());
+ *         $this->secureOutput('</div>');
  *     }
  * 
  *     public function isActive(): bool {
- *         return true; // Always active
+ *         return true;
  *     }
  * 
  *     public function isShutdownHandler(): bool {
- *         return false; // Run during normal execution
+ *         return false;
  *     }
  * }
  * ```
@@ -69,6 +82,15 @@ abstract class AbstractHandler {
     private int $priority;
     
     /**
+     * Security components
+     */
+    private SecurityConfig $security;
+    private PathSanitizer $pathSanitizer;
+    private StackTraceFilter $traceFilter;
+    private OutputSanitizer $outputSanitizer;
+    private SecurityMonitor $monitor;
+    
+    /**
      * Creates new instance of the class.
      */
     public function __construct() {
@@ -77,6 +99,26 @@ abstract class AbstractHandler {
         $this->isCalled = false;
         $this->isExecuting = false;
         $this->priority = 0;
+        
+        $this->initializeSecurity();
+    }
+    
+    /**
+     * Initialize security components.
+     */
+     private function initializeSecurity(): void {
+        $this->security = $this->createSecurityConfig();
+        $this->pathSanitizer = new PathSanitizer($this->security);
+        $this->traceFilter = new StackTraceFilter($this->security, $this->pathSanitizer);
+        $this->outputSanitizer = new OutputSanitizer($this->security);
+        $this->monitor = new SecurityMonitor($this->security);
+    }
+    
+    /**
+     * Create security configuration. Can be overridden by subclasses.
+     */
+    protected function createSecurityConfig(): SecurityConfig {
+        return new SecurityConfig();
     }
     
     /**
@@ -109,14 +151,15 @@ abstract class AbstractHandler {
     }
     
     /**
-     * Returns a string that represents the name of the class that an exception
-     * was thrown at.
+     * Returns a sanitized class name.
+     * Automatically filters sensitive path information based on environment.
      * 
      * @return string A string that represents the name of the class that an exception
      * was thrown at.
      */
     public function getClass(): string {
-        return TraceEntry::extractClassName($this->getException() !== null ? $this->getException()->getFile() : 'X');
+        $rawClass = $this->getRawClass();
+        return $this->pathSanitizer->sanitizeClassName($rawClass);
     }
     
     /**
@@ -125,34 +168,45 @@ abstract class AbstractHandler {
      * @return string Error code of the exception.
      */
     public function getCode(): string {
-        return $this->getException() !== null ? (string)$this->getException()->getCode() : '0';
+        return $this->exception !== null ? (string)$this->exception->getCode() : '0';
     }
     
     /**
-     * Returns an object that represents the exception which was thrown.
+     * Returns the exception object only if configuration allows it.
+     * In production, this returns null to prevent information disclosure.
      * 
      * @return Throwable|null An object that represents the exception which was thrown.
      */
     public function getException(): ?Throwable {
+        if (!$this->security->allowRawExceptionAccess()) {
+            $this->monitor->recordSecurityViolation('getException', $this);
+            return null;
+        }
         return $this->exception;
     }
     
     /**
-     * Returns the number of line at which the exception was thrown at.
+     * Returns a line number.
+     * May hide line numbers in production environments.
      * 
      * @return string The number of line at which the exception was thrown at.
      */
     public function getLine(): string {
-        return $this->getException() !== null ? (string)$this->getException()->getLine() : '(Unknown Line)';
+        if (!$this->security->shouldShowLineNumbers()) {
+            return '(Hidden for security)';
+        }
+        return $this->getRawLine();
     }
     
     /**
-     * Returns a string that represents exception message.
+     * Returns a sanitized exception message.
+     * Removes sensitive information like passwords, tokens, etc.
      * 
      * @return string A string that represents exception message.
      */
     public function getMessage(): string {
-        return $this->getException() !== null ? $this->getException()->getMessage() : 'No Message';
+        $rawMessage = $this->getRawMessage();
+        return $this->outputSanitizer->sanitizeMessage($rawMessage);
     }
     
     /**
@@ -165,19 +219,69 @@ abstract class AbstractHandler {
     }
     
     /**
-     * Returns an array that contains objects that represents stack trace of
-     * the call.
+     * Returns a filtered stack trace.
+     * Automatically removes sensitive paths and limits depth.
      * 
      * @return array<TraceEntry> An array that holds objects of type 'TraceEntry'
      */
     public function getTrace(): array {
-        return $this->traceArr;
+        $rawTrace = $this->getRawTrace();
+        return $this->traceFilter->filterTrace($rawTrace);
+    }
+    
+    /**
+     * Output method that all handlers should use.
+     * Automatically sanitizes content based on configuration.
+     * 
+     * @param string $content The content to output
+     */
+    protected function secureOutput(string $content): void {
+        $sanitized = $this->outputSanitizer->sanitize($content);
+        echo $sanitized;
+    }
+    
+    /**
+     * Logging method with automatic context sanitization.
+     * 
+     * @param string $message The log message
+     * @param array $context Additional context data
+     */
+    public function secureLog(string $message, array $context = []): void {
+        $sanitizedMessage = $this->outputSanitizer->sanitizeMessage($message);
+        $sanitizedContext = $this->outputSanitizer->sanitizeContext($context);
+        
+        error_log(json_encode([
+            'message' => $sanitizedMessage,
+            'context' => $sanitizedContext,
+            'timestamp' => time(),
+            'handler' => $this->getName()
+        ]));
+    }
+    
+    /**
+     * Check if we're in a production environment.
+     * 
+     * @return bool True if in production environment
+     */
+    protected function isSecureEnvironment(): bool {
+        return $this->security->isProduction();
+    }
+    
+    /**
+     * Get configuration for custom logic.
+     * 
+     * @return SecurityConfig The configuration
+     */
+    protected function getSecurityConfig(): SecurityConfig {
+        return $this->security;
     }
     
     /**
      * Handles the exception.
      * 
      * The developer can implement this method to handle all thrown exceptions.
+     * All data access methods automatically apply filtering, and all
+     * output should use secureOutput() method for automatic sanitization.
      */
     public abstract function handle(): void;
     
@@ -262,6 +366,48 @@ abstract class AbstractHandler {
      */
     public function setName(string $name): void {
         $this->name = trim($name);
+    }
+    
+    /**
+     * Internal method to get raw class name.
+     * Protected so only the framework can access it.
+     */
+    protected function getRawClass(): string {
+        return TraceEntry::extractClassName(
+            $this->exception?->getFile() ?? 'Unknown'
+        );
+    }
+    
+    /**
+     * Internal method to get raw line number.
+     */
+    protected function getRawLine(): string {
+        return $this->exception !== null ? (string)$this->exception->getLine() : '(Unknown Line)';
+    }
+    
+    /**
+     * Internal method to get raw message.
+     */
+    protected function getRawMessage(): string {
+        return $this->exception !== null ? $this->exception->getMessage() : 'No Message';
+    }
+    
+    /**
+     * Internal method to get raw trace.
+     */
+    protected function getRawTrace(): array {
+        return $this->traceArr;
+    }
+    
+    /**
+     * Fallback when a handler fails.
+     */
+    public function handleSecurityFallback(Throwable $handlerException): void {
+        if ($this->security->isProduction()) {
+            $this->secureOutput('<p>An error occurred. Please contact support.</p>');
+        } else {
+            $this->secureOutput('<p>Handler failed: ' . htmlspecialchars($handlerException->getMessage()) . '</p>');
+        }
     }
     
     /**

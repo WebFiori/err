@@ -65,7 +65,7 @@ class ErrorHandlingTest extends TestCase {
         unlink($tempLogFile);
         
         // Verify the handler failure was logged
-        $this->assertStringContainsString('Handler "FailingHandler" failed', $errorLog);
+        $this->assertStringContainsString('Handler execution failed', $errorLog);
     }
     
     /**

@@ -226,7 +226,7 @@ class Handler {
     }
     
     /**
-     * Execute a single handler with proper state management.
+     * Execute a single handler with proper state management and protection.
      * 
      * @param AbstractHandler $handler The handler to execute
      * @param Throwable|null $exception The exception to handle
@@ -239,14 +239,19 @@ class Handler {
         $handler->setIsExecuting(true);
         
         try {
+            // Execute the handler
             $handler->handle();
+            
         } catch (Throwable $handlerException) {
-            // Prevent infinite loops - log handler failures
-            error_log(sprintf(
-                'Handler "%s" failed: %s',
-                $handler->getName(),
-                $handlerException->getMessage()
-            ));
+            // Log handler failures
+            $handler->secureLog('Handler execution failed', [
+                'handler' => $handler->getName(),
+                'error' => $handlerException->getMessage()
+            ]);
+            
+            // Fallback to default behavior
+            $handler->handleSecurityFallback($handlerException);
+            
         } finally {
             $handler->setIsExecuting(false);
             $handler->setIsExecuted(true);

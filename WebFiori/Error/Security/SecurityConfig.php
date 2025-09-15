@@ -15,7 +15,7 @@ class SecurityConfig {
     private array $config;
     private ?string $projectRoot = null;
     
-    public function __construct(string $level = null) {
+    public function __construct(?string $level = null) {
         $this->securityLevel = $level ?? $this->detectSecurityLevel();
         $this->loadConfig();
         $this->detectProjectRoot();

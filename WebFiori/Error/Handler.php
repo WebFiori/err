@@ -622,7 +622,7 @@ class Handler {
             fprintf(STDERR, "Error Handler Failed: %s\n", $exception->getMessage());
         } else {
             // For web requests, output minimal safe HTML
-            echo '<p>An error occurred in the error handler. Please check the error logs.</p>';
+            echo 'An error occurred in the error handler. Please check the error logs.';
         }
     }
     

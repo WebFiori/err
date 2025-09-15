@@ -1,9 +1,8 @@
 <?php
 
+namespace WebFiori\Tests\Error;
 
-namespace webfiori\tests\error;
-
-use webfiori\error\AbstractHandler;
+use WebFiori\Error\AbstractHandler;
 
 class SampleHandler1 extends AbstractHandler {
     public function __construct() {
@@ -11,7 +10,8 @@ class SampleHandler1 extends AbstractHandler {
         $this->setPriority(1);
         $this->setName('H1');
     }
-    public function handle() {
+    
+    public function handle(): void {
         !defined('SampleHandler1') ? define('SampleHandler1', 'Yes') : '';
     }
 

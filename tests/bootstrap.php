@@ -3,6 +3,7 @@
 ini_set('display_startup_errors', 1);
 ini_set('display_errors', 1);
 error_reporting(-1);
+
 $testsDirName = 'tests';
 $rootDir = substr(__DIR__, 0, strlen(__DIR__) - strlen($testsDirName));
 $DS = DIRECTORY_SEPARATOR;
@@ -18,12 +19,21 @@ if (explode($DS, $rootDirTrimmed)[0] == 'home') {
 define('ROOT_DIR', $rootDir);
 const DS = DIRECTORY_SEPARATOR;
 echo 'Root Directory: \''.$rootDir.'\'.'."\n";
-$classesPath = $rootDir.'webfiori'.DS.'error'.DS;
+$classesPath = $rootDir.'vendor/autoload.php';
 
-require_once $classesPath . 'ErrorHandlerException.php';
-require_once $classesPath . 'AbstractHandler.php';
-require_once $classesPath . 'DefaultHandler.php';
-require_once $classesPath . 'TraceEntry.php';
-require_once $classesPath . 'Handler.php';
+if (file_exists($classesPath)) {
+    require_once $classesPath;
+} else {
+    echo "Autoloader not found at: $classesPath\n";
+    exit(1);
+}
 
+// Suppress error_log output during tests by redirecting to /dev/null
+$originalErrorLog = ini_get('error_log');
+ini_set('error_log', '/dev/null');
 
+// Register a shutdown function to clean up
+register_shutdown_function(function() use ($originalErrorLog) {
+    // Restore original error log setting
+    ini_set('error_log', $originalErrorLog);
+});

@@ -10,3 +10,4 @@ composer.phar
 tests/.phpunit.result.cache
 *.Identifier
 /tests/.phpunit.cache
+clover.xml

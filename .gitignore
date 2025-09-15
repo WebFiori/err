@@ -9,3 +9,4 @@ php-cs-fixer.phar
 composer.phar
 tests/.phpunit.result.cache
 *.Identifier
+/tests/.phpunit.cache

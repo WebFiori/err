@@ -122,6 +122,17 @@ abstract class AbstractHandler {
     }
     
     /**
+     * Update security level after handler creation.
+     */
+    public function updateSecurityLevel(string $level): void {
+        $this->security = new SecurityConfig($level);
+        $this->pathSanitizer = new PathSanitizer($this->security);
+        $this->traceFilter = new StackTraceFilter($this->security, $this->pathSanitizer);
+        $this->outputSanitizer = new OutputSanitizer($this->security);
+        $this->monitor = new SecurityMonitor($this->security);
+    }
+    
+    /**
      * Returns the priority of the handler.
      * 
      * The priority is a number which is used to set execution order of

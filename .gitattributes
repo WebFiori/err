@@ -6,3 +6,4 @@
 /.travis.yml export-ignore
 /phpunit.xml export-ignore
 /sonar-project.properties export-ignore
+/examples export-ignore

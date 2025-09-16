@@ -59,6 +59,11 @@ class HandlerConfig {
     private array $originalSettings = [];
     
     /**
+     * @var string|null Log destination for error_log
+     */
+    private ?string $logDestination = null;
+    
+    /**
      * Initialize configuration with safe defaults.
      */
     public function __construct() {
@@ -334,7 +339,6 @@ class HandlerConfig {
         $config->setErrorReporting(E_ALL)
                ->setDisplayErrors(true)
                ->setDisplayStartupErrors(true)
-               ->setModifyGlobalSettings(false)
                ->setModifyGlobalSettings(true)
                ->setRespectExistingSettings(true);
         
@@ -357,5 +361,25 @@ class HandlerConfig {
                ->setRespectExistingSettings(false);
         
         return $config;
+    }
+    
+    /**
+     * Set log destination for error_log.
+     * 
+     * @param string|null $destination File path or null for system log
+     * @return self
+     */
+    public function setLogDestination(?string $destination): self {
+        $this->logDestination = $destination;
+        return $this;
+    }
+    
+    /**
+     * Get log destination.
+     * 
+     * @return string|null
+     */
+    public function getLogDestination(): ?string {
+        return $this->logDestination;
     }
 }

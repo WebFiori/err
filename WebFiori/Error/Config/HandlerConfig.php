@@ -234,7 +234,7 @@ class HandlerConfig {
             error_reporting($this->errorReporting);
         }
         
-        if (!$this->respectExistingSettings || ini_get('display_errors') === false) {
+        if (!$this->respectExistingSettings || !ini_get('display_errors')) {
             ini_set('display_errors', $this->displayErrors ? '1' : '0');
         }
         

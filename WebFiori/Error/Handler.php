@@ -4,6 +4,7 @@ namespace WebFiori\Error;
 use Exception;
 use Throwable;
 use WebFiori\Error\Config\HandlerConfig;
+use WebFiori\Error\Security\SecurityConfig;
 /**
  * The core class which is used to define errors and exceptions handling.
  * 
@@ -365,7 +366,7 @@ class Handler {
      * 
      * @param Throwable|null $ex The exception to handle
      */
-    public function invokeExceptionsHandler(?Throwable $ex = null): void {
+    public static function invokeExceptionsHandler(?Throwable $ex = null): void {
         self::get()->sortHandlers();
         self::get()->lastException = $ex;
         call_user_func(self::get()->exceptionsHandler, $ex);
@@ -698,6 +699,15 @@ class Handler {
         
         if (self::$inst !== null) {
             self::$config->apply();
+        }
+    }
+    
+    /**
+     * Update security levels for all registered handlers.
+     */
+    public static function updateSecurityLevels(string $level): void {
+        foreach (self::get()->handlersPool as $handler) {
+            $handler->updateSecurityLevel($level);
         }
     }
     

@@ -236,6 +236,7 @@ class Handler {
             $instance->sortHandlers();
             
             foreach ($instance->handlersPool as $handler) {
+                $handler->setException($instance->lastException);
                 if ($handler->isActive() && !$handler->isShutdownHandler()) {
                     $this->executeHandler($handler, $ex);
                 }
@@ -687,6 +688,8 @@ class Handler {
         // Apply new configuration if handler is already initialized
         if (self::$inst !== null) {
             self::$config->apply();
+            // Propagate config to existing handlers
+            self::updateHandlerConfigs();
         }
     }
     
@@ -724,6 +727,15 @@ class Handler {
     public static function updateSecurityLevels(string $level): void {
         foreach (self::get()->handlersPool as $handler) {
             $handler->updateSecurityLevel($level);
+        }
+    }
+    
+    /**
+     * Update config for all registered handlers.
+     */
+    private static function updateHandlerConfigs(): void {
+        foreach (self::get()->handlersPool as $handler) {
+            $handler->setConfig(self::$config);
         }
     }
     

@@ -362,6 +362,15 @@ class Handler {
     }
     
     /**
+     * Handle an exception by invoking the exception handler.
+     * 
+     * @param Throwable|null $ex The exception to handle
+     */
+    public static function handleException(?Throwable $ex = null): void {
+        self::invokeExceptionsHandler($ex);
+    }
+    
+    /**
      * Invoke the exceptions handler for testing purposes.
      * 
      * @param Throwable|null $ex The exception to handle

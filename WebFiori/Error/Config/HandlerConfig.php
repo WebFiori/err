@@ -335,6 +335,7 @@ class HandlerConfig {
                ->setDisplayErrors(true)
                ->setDisplayStartupErrors(true)
                ->setModifyGlobalSettings(false)
+               ->setModifyGlobalSettings(true)
                ->setRespectExistingSettings(true);
         
         return $config;

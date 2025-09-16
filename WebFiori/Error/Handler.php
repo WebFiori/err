@@ -668,6 +668,13 @@ class Handler {
         
         self::$config = $config;
         
+        // Auto-update security level based on config type
+        if ($config->shouldDisplayErrors()) {
+            self::updateSecurityLevels(\WebFiori\Error\Security\SecurityConfig::LEVEL_DEV);
+        } else {
+            self::updateSecurityLevels(\WebFiori\Error\Security\SecurityConfig::LEVEL_PROD);
+        }
+        
         // Apply new configuration if handler is already initialized
         if (self::$inst !== null) {
             self::$config->apply();

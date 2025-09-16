@@ -74,9 +74,9 @@ class DefaultHandler extends AbstractHandler {
     private function outputExceptionHeader(): void {
         if ($this->isCLI()) {
             // CLI format - use ANSI colors and plain text
-            $this->secureOutput("\n" . str_repeat('=', 60) . "\n");
-            $this->secureOutput("\033[1;31mAPPLICATION ERROR\033[0m\n");
-            $this->secureOutput(str_repeat('=', 60) . "\n");
+            $this->secureOutput("\n" . str_repeat('-', 60) . "\n");
+            $this->secureOutput("\033[1;31mApplication Error\033[0m\n");
+            $this->secureOutput(str_repeat('-', 60) . "\n");
         } else {
             // HTML format
             if ($this->getSecurityConfig()->allowInlineStyles()) {
@@ -114,7 +114,7 @@ class DefaultHandler extends AbstractHandler {
                 $this->getLine()
             ));
         } else {
-            $this->secureOutput("\033[1mLocation:\033[0m Application code\n");
+            $this->secureOutput("\033[1mLocation:\033[0m Application Code\n");
         }
         
         // Show message (automatically sanitized)
@@ -272,7 +272,7 @@ class DefaultHandler extends AbstractHandler {
             date('Y-m-d H:i:s')
         ));
         
-        $this->secureOutput(str_repeat('=', 60) . "\n");
+        $this->secureOutput(str_repeat('-', 60) . "\n");
     }
     
     /**
@@ -315,7 +315,7 @@ class DefaultHandler extends AbstractHandler {
             }, $this->getTrace());
         }
         
-        $this->secureLog('Exception handled by DefaultHandler', $context);
+        $this->secureLog('Exception handled by: '.$this->getName(), $context);
     }
 
     /**

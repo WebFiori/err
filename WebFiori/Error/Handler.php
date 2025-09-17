@@ -558,7 +558,7 @@ class Handler {
      * 
      * @return bool True if a handler was removed, false otherwise
      */
-    private static function unregisterHandlerByClassName(string $className): bool {
+    public static function unregisterHandlerByClassName(string $className): bool {
         if (!class_exists($className)) {
             return false;
         }

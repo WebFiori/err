@@ -11,3 +11,5 @@ tests/.phpunit.result.cache
 *.Identifier
 /tests/.phpunit.cache
 clover.xml
+examples/basic/02-custom-handler/example-log.log
+examples/basic/02-custom-handler/example.log

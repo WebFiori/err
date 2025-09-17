@@ -4,6 +4,7 @@ namespace WebFiori\Error;
 use Exception;
 use Throwable;
 use WebFiori\Error\Config\HandlerConfig;
+use WebFiori\Error\Security\SecurityConfig;
 /**
  * The core class which is used to define errors and exceptions handling.
  * 
@@ -235,6 +236,9 @@ class Handler {
             $instance->sortHandlers();
             
             foreach ($instance->handlersPool as $handler) {
+                if ($ex !== null) {
+                    $handler->setException($ex);
+                }
                 if ($handler->isActive() && !$handler->isShutdownHandler()) {
                     $this->executeHandler($handler, $ex);
                 }
@@ -361,11 +365,20 @@ class Handler {
     }
     
     /**
+     * Handle an exception by invoking the exception handler.
+     * 
+     * @param Throwable|null $ex The exception to handle
+     */
+    public static function handleException(?Throwable $ex = null): void {
+        self::invokeExceptionsHandler($ex);
+    }
+    
+    /**
      * Invoke the exceptions handler for testing purposes.
      * 
      * @param Throwable|null $ex The exception to handle
      */
-    public function invokeExceptionsHandler(?Throwable $ex = null): void {
+    public static function invokeExceptionsHandler(?Throwable $ex = null): void {
         self::get()->sortHandlers();
         self::get()->lastException = $ex;
         call_user_func(self::get()->exceptionsHandler, $ex);
@@ -547,7 +560,7 @@ class Handler {
      * 
      * @return bool True if a handler was removed, false otherwise
      */
-    private static function unregisterHandlerByClassName(string $className): bool {
+    public static function unregisterHandlerByClassName(string $className): bool {
         if (!class_exists($className)) {
             return false;
         }
@@ -622,7 +635,7 @@ class Handler {
             fprintf(STDERR, "Error Handler Failed: %s\n", $exception->getMessage());
         } else {
             // For web requests, output minimal safe HTML
-            echo '<p>An error occurred in the error handler. Please check the error logs.</p>';
+            echo 'An error occurred in the error handler. Please check the error logs.';
         }
     }
     
@@ -667,9 +680,18 @@ class Handler {
         
         self::$config = $config;
         
+        // Auto-update security level based on config type
+        if ($config->shouldDisplayErrors()) {
+            self::updateSecurityLevels(\WebFiori\Error\Security\SecurityConfig::LEVEL_DEV);
+        } else {
+            self::updateSecurityLevels(\WebFiori\Error\Security\SecurityConfig::LEVEL_PROD);
+        }
+        
         // Apply new configuration if handler is already initialized
         if (self::$inst !== null) {
             self::$config->apply();
+            // Propagate config to existing handlers
+            self::updateHandlerConfigs();
         }
     }
     
@@ -698,6 +720,24 @@ class Handler {
         
         if (self::$inst !== null) {
             self::$config->apply();
+        }
+    }
+    
+    /**
+     * Update security levels for all registered handlers.
+     */
+    public static function updateSecurityLevels(string $level): void {
+        foreach (self::get()->handlersPool as $handler) {
+            $handler->updateSecurityLevel($level);
+        }
+    }
+    
+    /**
+     * Update config for all registered handlers.
+     */
+    private static function updateHandlerConfigs(): void {
+        foreach (self::get()->handlersPool as $handler) {
+            $handler->setConfig(self::$config);
         }
     }
     

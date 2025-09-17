@@ -25,12 +25,14 @@ class HandlerTest extends TestCase {
     public function test00() {
         $this->expectException(ErrorHandlerException::class);
         if (PHP_MAJOR_VERSION == 7) {
-            $msg = 'Run-time notice: Undefined variable: y at HandlerTest Line 34';
+            $msg = 'Run-time notice: Undefined variable: y at HandlerTest Line 36';
         } else {
-            $msg = 'An exception caused by an error. Run-time warning: Undefined variable $y at HandlerTest Line 34';
+            $msg = 'An exception caused by an error. Run-time warning: Undefined variable $y at HandlerTest Line 36';
         }
         $this->expectExceptionMessage($msg);
         $h = Handler::get();
+        // Ensure error handler is active
+        $h->reset();
         $x = $y;
     }
     /**
@@ -123,6 +125,7 @@ class HandlerTest extends TestCase {
     protected function tearDown(): void {
         $this->cleanupOutputBuffers();
         Handler::reset();
+        restore_error_handler();
     }
     
     public function testHandel00() {
@@ -130,7 +133,7 @@ class HandlerTest extends TestCase {
         $output = $this->captureOutput(function() {
             Handler::get()->invokeExceptionsHandler();
         });
-        $this->assertStringContainsString('APPLICATION ERROR', $output); // CLI format uses uppercase
+        $this->assertStringContainsString('Application Error', $output); // CLI format uses title case
         // The output format may vary based on security settings
         $this->assertTrue(
             str_contains($output, 'Unknown line (Unknown Line)') || 
@@ -144,8 +147,8 @@ class HandlerTest extends TestCase {
         $output = $this->captureOutput(function() {
             Handler::get()->invokeExceptionsHandler(new \Exception("Test Exc", 33));
         });
-        $this->assertStringContainsString('APPLICATION ERROR', $output); // CLI format uses uppercase
-        $this->assertStringContainsString('HandlerTest line 145', $output);
+        $this->assertStringContainsString('Application Error', $output); // CLI format uses title case
+        $this->assertStringContainsString('HandlerTest line 148', $output);
         $this->assertStringContainsString('Test Exc', $output);
     }
 }

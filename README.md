@@ -45,7 +45,7 @@ Or add to your `composer.json`:
 ```json
 {
     "require": {
-        "webfiori/err": "^1.0"
+        "webfiori/err": "^2.0"
     }
 }
 ```

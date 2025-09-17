@@ -7,6 +7,7 @@ use WebFiori\Error\Security\PathSanitizer;
 use WebFiori\Error\Security\StackTraceFilter;
 use WebFiori\Error\Security\OutputSanitizer;
 use WebFiori\Error\Security\SecurityMonitor;
+use WebFiori\Error\Config\HandlerConfig;
 
 /**
  * Abstract base class for implementing custom exception handlers with built-in security.
@@ -91,14 +92,22 @@ abstract class AbstractHandler {
     private SecurityMonitor $monitor;
     
     /**
-     * Creates new instance of the class.
+     * @var HandlerConfig|null
      */
-    public function __construct() {
+    private ?HandlerConfig $config = null;
+    
+    /**
+     * Creates new instance of the class.
+     * 
+     * @param HandlerConfig|null $config Optional configuration
+     */
+    public function __construct(?HandlerConfig $config = null) {
         $this->traceArr = [];
         $this->name = 'New Handler';
         $this->isCalled = false;
         $this->isExecuting = false;
         $this->priority = 0;
+        $this->config = $config;
         
         $this->initializeSecurity();
     }
@@ -119,6 +128,17 @@ abstract class AbstractHandler {
      */
     public function createSecurityConfig(): SecurityConfig {
         return new SecurityConfig();
+    }
+    
+    /**
+     * Update security level after handler creation.
+     */
+    public function updateSecurityLevel(string $level): void {
+        $this->security = new SecurityConfig($level);
+        $this->pathSanitizer = new PathSanitizer($this->security);
+        $this->traceFilter = new StackTraceFilter($this->security, $this->pathSanitizer);
+        $this->outputSanitizer = new OutputSanitizer($this->security);
+        $this->monitor = new SecurityMonitor($this->security);
     }
     
     /**
@@ -169,6 +189,17 @@ abstract class AbstractHandler {
      */
     public function getCode(): string {
         return $this->exception !== null ? (string)$this->exception->getCode() : '0';
+    }
+    
+    /**
+     * Returns a sanitized file path.
+     * Automatically filters sensitive path information based on environment.
+     * 
+     * @return string A string that represents the file path where the exception was thrown.
+     */
+    public function getFile(): string {
+        $rawFile = $this->getRawFile();
+        return $this->pathSanitizer->sanitizePath($rawFile);
     }
     
     /**
@@ -250,12 +281,19 @@ abstract class AbstractHandler {
         $sanitizedMessage = $this->outputSanitizer->sanitizeMessage($message);
         $sanitizedContext = $this->outputSanitizer->sanitizeContext($context);
         
-        error_log(json_encode([
+        $logData = json_encode([
             'message' => $sanitizedMessage,
             'context' => $sanitizedContext,
             'timestamp' => time(),
             'handler' => $this->getName()
-        ]));
+        ]);
+        
+        $destination = $this->config?->getLogDestination();
+        if ($destination !== null) {
+            error_log($logData."\n", 3, $destination);
+        } else {
+            error_log($logData);
+        }
     }
     
     /**
@@ -274,6 +312,15 @@ abstract class AbstractHandler {
      */
     protected function getSecurityConfig(): SecurityConfig {
         return $this->security;
+    }
+    
+    /**
+     * Set handler configuration.
+     * 
+     * @param HandlerConfig $config The configuration
+     */
+    public function setConfig(HandlerConfig $config): void {
+        $this->config = $config;
     }
     
     /**
@@ -383,6 +430,13 @@ abstract class AbstractHandler {
      */
     protected function getRawLine(): string {
         return $this->exception !== null ? (string)$this->exception->getLine() : '(Unknown Line)';
+    }
+    
+    /**
+     * Internal method to get raw file path.
+     */
+    protected function getRawFile(): string {
+        return $this->exception !== null ? $this->exception->getFile() : '(Unknown File)';
     }
     
     /**

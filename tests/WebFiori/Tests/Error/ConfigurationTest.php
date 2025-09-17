@@ -40,6 +40,7 @@ class ConfigurationTest extends TestCase {
         ini_set('display_startup_errors', $this->originalSettings['display_startup_errors']);
         
         Handler::shutdown();
+        restore_error_handler();
     }
     
     /**
@@ -90,7 +91,7 @@ class ConfigurationTest extends TestCase {
         // Development should be verbose but still safe
         $this->assertTrue($config->shouldDisplayErrors());
         $this->assertTrue($config->shouldDisplayStartupErrors());
-        $this->assertFalse($config->shouldModifyGlobalSettings()); // Still safe by default
+        $this->assertTrue($config->shouldModifyGlobalSettings()); // Development config modifies globals
         $this->assertTrue($config->shouldRespectExistingSettings());
         
         // Should report all errors

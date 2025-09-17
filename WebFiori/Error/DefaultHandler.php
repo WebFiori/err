@@ -78,7 +78,11 @@ class DefaultHandler extends AbstractHandler {
             $this->secureOutput("\033[1;31mApplication Error\033[0m\n");
             $this->secureOutput(str_repeat('-', 60) . "\n");
         } else {
-            // HTML format
+            // HTML format - ensure output is sent to browser
+            if (ob_get_level()) {
+                ob_end_flush();
+            }
+            
             if ($this->getSecurityConfig()->allowInlineStyles()) {
                 $this->secureOutput('<div style="border: 1px solid #dc3545; background: #f8d7da; color: #721c24; padding: 15px; margin: 10px 0; border-radius: 4px; font-family: monospace;">');
             } else {

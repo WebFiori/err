@@ -123,6 +123,7 @@ class HandlerTest extends TestCase {
     protected function tearDown(): void {
         $this->cleanupOutputBuffers();
         Handler::reset();
+        restore_error_handler();
     }
     
     public function testHandel00() {

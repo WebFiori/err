@@ -24,6 +24,7 @@ class CLIFormattingTest extends TestCase {
     
     protected function tearDown(): void {
         Handler::reset();
+        restore_error_handler(); // Ensure error handler is restored
         $this->cleanupOutputBuffers();
         parent::tearDown();
     }

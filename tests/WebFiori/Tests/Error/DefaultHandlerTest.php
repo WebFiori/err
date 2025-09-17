@@ -24,6 +24,7 @@ class DefaultHandlerTest extends TestCase {
     
     protected function tearDown(): void {
         Handler::reset();
+        restore_error_handler();
         $this->cleanupOutputBuffers();
         parent::tearDown();
     }

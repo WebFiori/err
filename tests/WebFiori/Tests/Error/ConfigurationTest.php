@@ -40,6 +40,7 @@ class ConfigurationTest extends TestCase {
         ini_set('display_startup_errors', $this->originalSettings['display_startup_errors']);
         
         Handler::shutdown();
+        restore_error_handler();
     }
     
     /**

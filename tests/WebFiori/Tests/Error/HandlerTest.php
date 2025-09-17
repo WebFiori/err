@@ -25,9 +25,9 @@ class HandlerTest extends TestCase {
     public function test00() {
         $this->expectException(ErrorHandlerException::class);
         if (PHP_MAJOR_VERSION == 7) {
-            $msg = 'Run-time notice: Undefined variable: y at HandlerTest Line 34';
+            $msg = 'Run-time notice: Undefined variable: y at HandlerTest Line 36';
         } else {
-            $msg = 'An exception caused by an error. Run-time warning: Undefined variable $y at HandlerTest Line 34';
+            $msg = 'An exception caused by an error. Run-time warning: Undefined variable $y at HandlerTest Line 36';
         }
         $this->expectExceptionMessage($msg);
         $h = Handler::get();

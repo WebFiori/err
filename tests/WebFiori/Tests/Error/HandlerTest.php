@@ -31,6 +31,8 @@ class HandlerTest extends TestCase {
         }
         $this->expectExceptionMessage($msg);
         $h = Handler::get();
+        // Ensure error handler is active
+        $h->reset();
         $x = $y;
     }
     /**

@@ -148,7 +148,7 @@ class HandlerTest extends TestCase {
             Handler::get()->invokeExceptionsHandler(new \Exception("Test Exc", 33));
         });
         $this->assertStringContainsString('Application Error', $output); // CLI format uses title case
-        $this->assertStringContainsString('HandlerTest line 145', $output);
+        $this->assertStringContainsString('HandlerTest line 148', $output);
         $this->assertStringContainsString('Test Exc', $output);
     }
 }

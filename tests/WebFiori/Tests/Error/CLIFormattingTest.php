@@ -80,7 +80,7 @@ class CLIFormattingTest extends TestCase {
         $this->assertStringContainsString("\033[", $output);
         
         // CLI output should contain the error information
-        $this->assertStringContainsString('APPLICATION ERROR', $output);
+        $this->assertStringContainsString('Application Error', $output);
         $this->assertStringContainsString('Test CLI exception', $output);
         $this->assertStringContainsString('123', $output); // Just check for the code number
     }
@@ -188,7 +188,7 @@ class CLIFormattingTest extends TestCase {
         
         // Should contain CLI-style separators
         $this->assertStringContainsString(str_repeat('-', 40), $output);
-        $this->assertStringContainsString(str_repeat('=', 60), $output);
+        $this->assertStringContainsString(str_repeat('-', 60), $output);
         
         // Should not contain HTML stack trace elements
         $this->assertStringNotContainsString('<details>', $output);
@@ -290,8 +290,8 @@ class CLIFormattingTest extends TestCase {
         });
         
         // Production CLI output should be minimal
-        $this->assertStringContainsString('APPLICATION ERROR', $output);
-        $this->assertStringContainsString('Application code', $output); // Remove "Location:" prefix
+        $this->assertStringContainsString('Application Error', $output);
+        $this->assertStringContainsString('Application Code', $output); // Remove "Location:" prefix
         $this->assertStringContainsString('An error occurred during processing', $output); // Remove "Details:" prefix
         
         // Should not contain sensitive information

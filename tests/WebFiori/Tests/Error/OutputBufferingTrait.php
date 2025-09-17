@@ -114,7 +114,9 @@ trait OutputBufferingTrait {
         try {
             $callback();
             $output = ob_get_contents() ?: '';
-            ob_end_clean(); // Clean without displaying
+            if (ob_get_level() > 0) {
+                ob_end_clean(); // Clean without displaying
+            }
             
             $this->capturedOutput = $output;
             return $output;

@@ -236,7 +236,9 @@ class Handler {
             $instance->sortHandlers();
             
             foreach ($instance->handlersPool as $handler) {
-                $handler->setException($instance->lastException);
+                if ($ex !== null) {
+                    $handler->setException($ex);
+                }
                 if ($handler->isActive() && !$handler->isShutdownHandler()) {
                     $this->executeHandler($handler, $ex);
                 }

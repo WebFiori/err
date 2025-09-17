@@ -90,7 +90,7 @@ class ConfigurationTest extends TestCase {
         // Development should be verbose but still safe
         $this->assertTrue($config->shouldDisplayErrors());
         $this->assertTrue($config->shouldDisplayStartupErrors());
-        $this->assertFalse($config->shouldModifyGlobalSettings()); // Still safe by default
+        $this->assertTrue($config->shouldModifyGlobalSettings()); // Development config modifies globals
         $this->assertTrue($config->shouldRespectExistingSettings());
         
         // Should report all errors

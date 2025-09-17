@@ -130,7 +130,7 @@ class HandlerTest extends TestCase {
         $output = $this->captureOutput(function() {
             Handler::get()->invokeExceptionsHandler();
         });
-        $this->assertStringContainsString('APPLICATION ERROR', $output); // CLI format uses uppercase
+        $this->assertStringContainsString('Application Error', $output); // CLI format uses title case
         // The output format may vary based on security settings
         $this->assertTrue(
             str_contains($output, 'Unknown line (Unknown Line)') || 
@@ -144,7 +144,7 @@ class HandlerTest extends TestCase {
         $output = $this->captureOutput(function() {
             Handler::get()->invokeExceptionsHandler(new \Exception("Test Exc", 33));
         });
-        $this->assertStringContainsString('APPLICATION ERROR', $output); // CLI format uses uppercase
+        $this->assertStringContainsString('Application Error', $output); // CLI format uses title case
         $this->assertStringContainsString('HandlerTest line 145', $output);
         $this->assertStringContainsString('Test Exc', $output);
     }

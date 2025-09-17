@@ -108,21 +108,26 @@ trait OutputBufferingTrait {
      * @return string The captured output
      */
     protected function captureOutput(callable $callback): string {
+        // Store initial buffer level
+        $initialLevel = ob_get_level();
+        
         // Start a new buffer level specifically for this capture
         ob_start();
         
         try {
             $callback();
             $output = ob_get_contents() ?: '';
-            if (ob_get_level() > 0) {
-                ob_end_clean(); // Clean without displaying
+            
+            // Only clean buffers we created
+            while (ob_get_level() > $initialLevel) {
+                ob_end_clean();
             }
             
             $this->capturedOutput = $output;
             return $output;
         } catch (\Throwable $e) {
-            // Clean up buffer even on exception
-            if (ob_get_level() > 0) {
+            // Clean up only buffers we created
+            while (ob_get_level() > $initialLevel) {
                 ob_end_clean();
             }
             throw $e;

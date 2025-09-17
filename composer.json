@@ -24,7 +24,7 @@
             "WebFiori\\Tests\\Error\\": "tests/WebFiori/Tests/Error/"
         }
     },
-    "scripts" : {
+    "scripts": {
         "test": "vendor/bin/phpunit -c tests/phpunit.xml",
         "test10": "vendor/bin/phpunit -c tests/phpunit10.xml",
         "fix-cs": "vendor/bin/php-cs-fixer fix --config=php_cs.php.dist"

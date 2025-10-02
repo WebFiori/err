@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/WebFiori/err/compare/v2.0.0...v2.0.1) (2025-10-02)
+
+
+### Miscellaneous Chores
+
+* Update .gitattributes With Correct Release Info ([2f28bf8](https://github.com/WebFiori/err/commit/2f28bf89833367d5260303bd580abe25be0a94ad))
+
 ## [2.0.0](https://github.com/WebFiori/err/compare/v1.2.0...v2.0.0) (2025-09-17)
 
 

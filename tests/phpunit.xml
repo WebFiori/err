@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit colors="true" bootstrap="bootstrap.php">
-    <php>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" colors="true" bootstrap="bootstrap.php" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd" cacheDirectory=".phpunit.cache">
+  <coverage includeUncoveredFiles="true">
+    <report>
+      <clover outputFile="clover.xml"/>
+    </report>
+  </coverage>
+  <php>
     </php>
-    <filter>
-        <whitelist addUncoveredFilesFromWhitelist="true">
-            <file>../WebFiori/Error/TraceEntry.php</file>
-            <file>../WebFiori/Error/Handler.php</file>
-            <file>../WebFiori/Error/AbstractHandler.php</file>
-            <file>../WebFiori/Error/DefaultHandler.php</file>
-        </whitelist>
-    </filter>
-    <logging>
-        <log type="coverage-clover" target="clover.xml"/>
-    </logging>
-    <testsuites>
-        <testsuite name="Tests">
-            <directory>./WebFiori/Tests/Error</directory>
-        </testsuite>
-    </testsuites>
+  <logging/>
+  <testsuites>
+    <testsuite name="Tests">
+      <directory>./WebFiori/Tests/Error</directory>
+    </testsuite>
+  </testsuites>
+  <source>
+    <include>
+      <file>../WebFiori/Error/TraceEntry.php</file>
+      <file>../WebFiori/Error/Handler.php</file>
+      <file>../WebFiori/Error/AbstractHandler.php</file>
+      <file>../WebFiori/Error/DefaultHandler.php</file>
+    </include>
+  </source>
 </phpunit>

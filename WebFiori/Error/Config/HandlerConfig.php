@@ -64,6 +64,11 @@ class HandlerConfig {
     private ?string $logDestination = null;
     
     /**
+     * @var int Bitmask of error levels that should be converted to exceptions.
+     */
+    private int $throwableErrors;
+    
+    /**
      * Initialize configuration with safe defaults.
      */
     public function __construct() {
@@ -83,6 +88,7 @@ class HandlerConfig {
             $this->displayStartupErrors = false;
             $this->modifyGlobalSettings = false;
             $this->respectExistingSettings = true;
+            $this->throwableErrors = E_ALL & ~(E_DEPRECATED | E_USER_DEPRECATED | E_NOTICE | E_USER_NOTICE);
         } else {
             // Development defaults - more verbose but still safe
             $this->errorReporting = E_ALL;
@@ -90,6 +96,7 @@ class HandlerConfig {
             $this->displayStartupErrors = true;
             $this->modifyGlobalSettings = false; // Still don't modify by default
             $this->respectExistingSettings = true;
+            $this->throwableErrors = E_ALL & ~(E_DEPRECATED | E_USER_DEPRECATED | E_NOTICE | E_USER_NOTICE);
         }
     }
     
@@ -217,6 +224,35 @@ class HandlerConfig {
      */
     public function shouldRespectExistingSettings(): bool {
         return $this->respectExistingSettings;
+    }
+    
+    /**
+     * Set the bitmask of error levels that should be converted to exceptions.
+     *
+     * Errors not matching this mask will be silently ignored by the error-to-exception
+     * handler. Use E_* constants combined with bitwise operators.
+     *
+     * Example: To also throw on deprecations:
+     * ```php
+     * $config->setThrowableErrors(E_ALL);
+     * ```
+     *
+     * @param int $mask Bitmask of error levels.
+     *
+     * @return self
+     */
+    public function setThrowableErrors(int $mask): self {
+        $this->throwableErrors = $mask;
+        return $this;
+    }
+    
+    /**
+     * Get the bitmask of error levels that are converted to exceptions.
+     *
+     * @return int
+     */
+    public function getThrowableErrors(): int {
+        return $this->throwableErrors;
     }
     
     /**

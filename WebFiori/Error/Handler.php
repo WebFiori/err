@@ -213,6 +213,14 @@ class Handler {
      */
     private function createErrorToExceptionHandler(): void {
         $this->errToExceptionHandler = function (int $errno, string $errString, string $errFile, int $errLine): void {
+            // Respect @ suppression operator
+            if (!(error_reporting() & $errno)) {
+                return;
+            }
+            // Only convert error levels configured as throwable
+            if (self::$config !== null && !(self::$config->getThrowableErrors() & $errno)) {
+                return;
+            }
             $errClass = TraceEntry::extractClassName($errFile);
             $errType = self::ERR_TYPES[$errno] ?? ['type' => 'UNKNOWN', 'description' => 'Unknown error'];
             $message = sprintf(

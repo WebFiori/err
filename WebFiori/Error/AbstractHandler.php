@@ -512,7 +512,7 @@ abstract class AbstractHandler {
      * Sets the trace array based on the current exception.
      */
     private function setTrace(): void {
-        $ex = $this->getException();
+        $ex = $this->exception;
         
         if ($ex === null) {
             $this->traceArr = [];

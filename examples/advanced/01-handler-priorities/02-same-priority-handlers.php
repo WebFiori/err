@@ -1,12 +1,13 @@
 <?php
+
 /**
  * Section 2: Handlers with Same Priority
  */
 
-require_once __DIR__ . '/00-shared-classes.php';
+require_once __DIR__.'/00-shared-classes.php';
 
-use WebFiori\Error\Handler;
 use WebFiori\Error\Config\HandlerConfig;
+use WebFiori\Error\Handler;
 
 Handler::setConfig(HandlerConfig::createDevelopmentConfig());
 
@@ -35,7 +36,7 @@ class SamePriorityC extends PriorityDemoHandler {
 }
 
 echo "Section 2: Handlers with Same Priority\n";
-echo str_repeat('-', 35) . "\n";
+echo str_repeat('-', 35)."\n";
 
 PriorityDemoHandler::resetCounter();
 
@@ -50,6 +51,7 @@ foreach ($sameHandlers as $handler) {
 }
 
 echo "Registered 3 handlers with same priority (50):\n";
+
 foreach ($sameHandlers as $handler) {
     echo "- {$handler->getName()}\n";
 }

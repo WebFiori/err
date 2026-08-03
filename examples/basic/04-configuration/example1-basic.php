@@ -1,16 +1,17 @@
 <?php
+
 /**
  * Example 1: Basic Configuration
  */
 
-require_once __DIR__ . '/../../../vendor/autoload.php';
+require_once __DIR__.'/../../../vendor/autoload.php';
 
-use WebFiori\Error\Handler;
-use WebFiori\Error\DefaultHandler;
 use WebFiori\Error\Config\HandlerConfig;
+use WebFiori\Error\DefaultHandler;
+use WebFiori\Error\Handler;
 
 echo "Example 1: Basic Configuration\n";
-echo str_repeat('-', 25) . "\n";
+echo str_repeat('-', 25)."\n";
 
 $config = new HandlerConfig();
 $config->setErrorReporting(E_ALL & ~E_NOTICE);

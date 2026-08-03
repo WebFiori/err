@@ -27,30 +27,29 @@ namespace WebFiori\Error;
  */
 class TraceEntry {
     /**
+     * @var ?string Cached string representation to avoid repeated computation
+     */
+    private ?string $cachedString = null;
+    /**
      * @var string The class name where the call occurred
      */
     private string $class;
-    
+
     /**
      * @var string The file path where the call occurred
      */
     private string $file;
-    
+
     /**
      * @var string The line number where the call occurred
      */
     private string $line;
-    
+
     /**
      * @var string The method or function name that was called
      */
     private string $method;
-    
-    /**
-     * @var ?string Cached string representation to avoid repeated computation
-     */
-    private ?string $cachedString = null;
-    
+
     /**
      * Creates new instance of the class.
      * 
@@ -66,71 +65,7 @@ class TraceEntry {
     public function __construct(array $debugTraceEntry) {
         $this->initializeFromTraceEntry($debugTraceEntry);
     }
-    
-    /**
-     * Initialize properties from the debug trace entry.
-     * 
-     * @param array<string, mixed> $debugTraceEntry The trace entry data
-     */
-    private function initializeFromTraceEntry(array $debugTraceEntry): void {
-        $this->method = $this->extractMethod($debugTraceEntry);
-        $this->file = $this->extractFile($debugTraceEntry);
-        $this->line = $this->extractLine($debugTraceEntry);
-        $this->class = $this->extractClass($debugTraceEntry);
-    }
-    
-    /**
-     * Extract method name from trace entry.
-     * 
-     * @param array<string, mixed> $debugTraceEntry The trace entry data
-     * @return string The method name or empty string
-     */
-    private function extractMethod(array $debugTraceEntry): string {
-        $function = $debugTraceEntry['function'] ?? '';
-        return is_array($function) ? 'Array' : (string)$function;
-    }
-    
-    /**
-     * Extract file path from trace entry.
-     * 
-     * @param array<string, mixed> $debugTraceEntry The trace entry data
-     * @return string The file path or method name as fallback
-     */
-    private function extractFile(array $debugTraceEntry): string {
-        return (string)($debugTraceEntry['file'] ?? $this->method);
-    }
-    
-    /**
-     * Extract line number from trace entry.
-     * 
-     * @param array<string, mixed> $debugTraceEntry The trace entry data
-     * @return string The line number or "(Unknown Line)"
-     */
-    private function extractLine(array $debugTraceEntry): string {
-        $line = $debugTraceEntry['line'] ?? '(Unknown Line)';
-        if (is_array($line)) {
-            return 'Array';
-        }
-        if (is_bool($line)) {
-            return $line ? '1' : '';
-        }
-        return (string)$line;
-    }
-    
-    /**
-     * Extract class name from trace entry.
-     * 
-     * @param array<string, mixed> $debugTraceEntry The trace entry data
-     * @return string The class name or extracted from file path
-     */
-    private function extractClass(array $debugTraceEntry): string {
-        $class = $debugTraceEntry['class'] ?? null;
-        if ($class !== null) {
-            return is_array($class) ? 'Array' : (string)$class;
-        }
-        return self::extractClassName($this->file);
-    }
-    
+
     /**
      * Converts the entry to a human-readable string representation.
      * 
@@ -141,35 +76,19 @@ class TraceEntry {
         if ($this->cachedString !== null) {
             return $this->cachedString;
         }
-        
+
         $this->cachedString = $this->formatTraceEntry();
+
         return $this->cachedString;
     }
-    
+
     /**
-     * Format the trace entry as a readable string.
-     * 
-     * @return string The formatted trace entry
+     * Clear cached data to free memory.
      */
-    private function formatTraceEntry(): string {
-        $baseString = sprintf('At class %s', $this->getClass());
-        
-        if ($this->hasValidLine()) {
-            $baseString .= sprintf(' line %s', $this->getLine());
-        }
-        
-        return $baseString;
+    public function clearCache(): void {
+        $this->cachedString = null;
     }
-    
-    /**
-     * Check if the line number is valid (not the unknown placeholder).
-     * 
-     * @return bool True if line number is valid
-     */
-    private function hasValidLine(): bool {
-        return $this->getLine() !== '(Unknown Line)';
-    }
-    
+
     /**
      * Extract PHP class name from a file path.
      * 
@@ -186,30 +105,87 @@ class TraceEntry {
         if (empty($filePath)) {
             return '(Unknown Class)';
         }
-        
+
         $normalizedPath = self::normalizePath($filePath);
         $pathSegments = explode(DIRECTORY_SEPARATOR, $normalizedPath);
-        
+
         // Get the last segment (file name)
         $fileName = end($pathSegments);
-        
+
         if (empty($fileName)) {
             return '(Unknown Class)';
         }
-        
+
         return self::extractClassNameFromFile($fileName);
     }
-    
+
     /**
-     * Normalize file path separators.
+     * Returns the name of the class that the entry represents.
      * 
-     * @param string $filePath The file path to normalize
-     * @return string The normalized path
+     * @return string The name of the class that the entry represents
      */
-    private static function normalizePath(string $filePath): string {
-        return str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $filePath);
+    public function getClass(): string {
+        return $this->class;
     }
-    
+
+    /**
+     * Returns the file path of the entry.
+     * 
+     * @return string The file path of the entry
+     */
+    public function getFile(): string {
+        return $this->file;
+    }
+
+    /**
+     * Returns the line number of the entry.
+     * 
+     * @return string The line number of the entry
+     */
+    public function getLine(): string {
+        return $this->line;
+    }
+
+    /**
+     * Get memory usage of this trace entry.
+     * 
+     * @return int Approximate memory usage in bytes
+     */
+    public function getMemoryUsage(): int {
+        $size = strlen($this->class) + strlen($this->file) + strlen($this->line) + strlen($this->method);
+
+        if ($this->cachedString !== null) {
+            $size += strlen($this->cachedString);
+        }
+
+        return $size;
+    }
+
+    /**
+     * Returns the method or function name of the entry.
+     * 
+     * @return string The method or function name
+     */
+    public function getMethod(): string {
+        return $this->method;
+    }
+
+    /**
+     * Extract class name from trace entry.
+     * 
+     * @param array<string, mixed> $debugTraceEntry The trace entry data
+     * @return string The class name or extracted from file path
+     */
+    private function extractClass(array $debugTraceEntry): string {
+        $class = $debugTraceEntry['class'] ?? null;
+
+        if ($class !== null) {
+            return is_array($class) ? 'Array' : (string)$class;
+        }
+
+        return self::extractClassName($this->file);
+    }
+
     /**
      * Extract class name from a file name.
      * 
@@ -220,71 +196,103 @@ class TraceEntry {
         if (empty($fileName)) {
             return '(Unknown Class)';
         }
-        
+
         // Remove file extension
         $baseName = explode('.', $fileName)[0];
-        
+
         if (empty($baseName)) {
             return '(Unknown Class)';
         }
-        
+
         // Capitalize first letter and return
         return ucfirst($baseName);
     }
-    
+
     /**
-     * Returns the name of the class that the entry represents.
+     * Extract file path from trace entry.
      * 
-     * @return string The name of the class that the entry represents
+     * @param array<string, mixed> $debugTraceEntry The trace entry data
+     * @return string The file path or method name as fallback
      */
-    public function getClass(): string {
-        return $this->class;
+    private function extractFile(array $debugTraceEntry): string {
+        return (string)($debugTraceEntry['file'] ?? $this->method);
     }
-    
+
     /**
-     * Returns the file path of the entry.
+     * Extract line number from trace entry.
      * 
-     * @return string The file path of the entry
+     * @param array<string, mixed> $debugTraceEntry The trace entry data
+     * @return string The line number or "(Unknown Line)"
      */
-    public function getFile(): string {
-        return $this->file;
-    }
-    
-    /**
-     * Returns the line number of the entry.
-     * 
-     * @return string The line number of the entry
-     */
-    public function getLine(): string {
-        return $this->line;
-    }
-    
-    /**
-     * Returns the method or function name of the entry.
-     * 
-     * @return string The method or function name
-     */
-    public function getMethod(): string {
-        return $this->method;
-    }
-    
-    /**
-     * Clear cached data to free memory.
-     */
-    public function clearCache(): void {
-        $this->cachedString = null;
-    }
-    
-    /**
-     * Get memory usage of this trace entry.
-     * 
-     * @return int Approximate memory usage in bytes
-     */
-    public function getMemoryUsage(): int {
-        $size = strlen($this->class) + strlen($this->file) + strlen($this->line) + strlen($this->method);
-        if ($this->cachedString !== null) {
-            $size += strlen($this->cachedString);
+    private function extractLine(array $debugTraceEntry): string {
+        $line = $debugTraceEntry['line'] ?? '(Unknown Line)';
+
+        if (is_array($line)) {
+            return 'Array';
         }
-        return $size;
+
+        if (is_bool($line)) {
+            return $line ? '1' : '';
+        }
+
+        return (string)$line;
+    }
+
+    /**
+     * Extract method name from trace entry.
+     * 
+     * @param array<string, mixed> $debugTraceEntry The trace entry data
+     * @return string The method name or empty string
+     */
+    private function extractMethod(array $debugTraceEntry): string {
+        $function = $debugTraceEntry['function'] ?? '';
+
+        return is_array($function) ? 'Array' : (string)$function;
+    }
+
+    /**
+     * Format the trace entry as a readable string.
+     * 
+     * @return string The formatted trace entry
+     */
+    private function formatTraceEntry(): string {
+        $baseString = sprintf('At class %s', $this->getClass());
+
+        if ($this->hasValidLine()) {
+            $baseString .= sprintf(' line %s', $this->getLine());
+        }
+
+        return $baseString;
+    }
+
+    /**
+     * Check if the line number is valid (not the unknown placeholder).
+     * 
+     * @return bool True if line number is valid
+     */
+    private function hasValidLine(): bool {
+        return $this->getLine() !== '(Unknown Line)';
+    }
+
+    /**
+     * Initialize properties from the debug trace entry.
+     * 
+     * @param array<string, mixed> $debugTraceEntry The trace entry data
+     */
+    private function initializeFromTraceEntry(array $debugTraceEntry): void {
+        $this->method = $this->extractMethod($debugTraceEntry);
+        $this->file = $this->extractFile($debugTraceEntry);
+        $this->line = $this->extractLine($debugTraceEntry);
+        $this->class = $this->extractClass($debugTraceEntry);
+    }
+
+    /**
+     * Normalize file path separators.
+     * 
+     * @param string $filePath The file path to normalize
+     * @return string The normalized path
+     */
+    private static function normalizePath(string $filePath): string {
+        return str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $filePath);
     }
 }

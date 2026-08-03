@@ -1,18 +1,18 @@
 <?php
+
 /**
  * Database Setup Script
  * 
  * This script creates the database schema for error logging.
  */
-
-$dbFile = __DIR__ . '/errors.db';
+$dbFile = __DIR__.'/errors.db';
 
 try {
     $pdo = new PDO("sqlite:{$dbFile}");
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    
+
     echo "Setting up error logging database...\n";
-    
+
     // Create error_logs table
     $createTable = "
         CREATE TABLE IF NOT EXISTS error_logs (
@@ -32,9 +32,9 @@ try {
             execution_time REAL
         )
     ";
-    
+
     $pdo->exec($createTable);
-    
+
     // Create indexes for better query performance
     $indexes = [
         "CREATE INDEX IF NOT EXISTS idx_error_type ON error_logs(exception_type)",
@@ -42,17 +42,16 @@ try {
         "CREATE INDEX IF NOT EXISTS idx_severity ON error_logs(severity)",
         "CREATE INDEX IF NOT EXISTS idx_file_line ON error_logs(file, line)"
     ];
-    
+
     foreach ($indexes as $index) {
         $pdo->exec($index);
     }
-    
+
     echo "✓ Created error_logs table\n";
     echo "✓ Created performance indexes\n";
     echo "✓ Database setup completed successfully!\n";
     echo "\nDatabase file: {$dbFile}\n";
-    
 } catch (PDOException $e) {
-    echo "Database setup failed: " . $e->getMessage() . "\n";
+    echo "Database setup failed: ".$e->getMessage()."\n";
     exit(1);
 }

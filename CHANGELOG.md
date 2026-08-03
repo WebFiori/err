@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.0.3](https://github.com/WebFiori/err/compare/v2.0.2...v2.0.3) (2026-06-14)
+
+
+### Bug Fixes
+
+* respect @ suppression and add configurable throwable error levels ([adf5a79](https://github.com/WebFiori/err/commit/adf5a792f37e1d586bd15af9c7e58646c9b44185))
+
+
+### Miscellaneous Chores
+
+* Merge pull request [#25](https://github.com/WebFiori/err/issues/25) from WebFiori/dev ([28fb910](https://github.com/WebFiori/err/commit/28fb9107c5ed4060cbacb53fec9a640aaf0e3c94))
+
+## [2.0.2](https://github.com/WebFiori/err/compare/v2.0.1...v2.0.2) (2026-06-02)
+
+
+### Miscellaneous Chores
+
+* align CI with ecosystem baseline ([6563764](https://github.com/WebFiori/err/commit/65637648f58cad53d837d35cc5eb3e9cc6f882be))
+* align CI with ecosystem baseline ([90369f5](https://github.com/WebFiori/err/commit/90369f5ff6c3686a871a4e86cc76c4bde3a6f9f1))
+
 ## [2.0.1](https://github.com/WebFiori/err/compare/v2.0.0...v2.0.1) (2025-10-02)
 
 

@@ -1,12 +1,13 @@
 <?php
+
 /**
  * Section 1: Basic Priority Ordering
  */
 
-require_once __DIR__ . '/00-shared-classes.php';
+require_once __DIR__.'/00-shared-classes.php';
 
-use WebFiori\Error\Handler;
 use WebFiori\Error\Config\HandlerConfig;
+use WebFiori\Error\Handler;
 
 Handler::setConfig(HandlerConfig::createDevelopmentConfig());
 
@@ -50,7 +51,7 @@ class DefaultPriorityHandler extends PriorityDemoHandler {
 }
 
 echo "Section 1: Basic Priority Ordering\n";
-echo str_repeat('-', 35) . "\n";
+echo str_repeat('-', 35)."\n";
 
 PriorityDemoHandler::resetCounter();
 
@@ -67,6 +68,7 @@ foreach ($handlers as $handler) {
 }
 
 echo "Registered handlers in random order:\n";
+
 foreach ($handlers as $handler) {
     echo "- {$handler->getName()} (Priority: {$handler->getPriority()})\n";
 }

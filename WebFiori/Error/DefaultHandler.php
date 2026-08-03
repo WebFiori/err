@@ -29,26 +29,18 @@ namespace WebFiori\Error;
  */
 class DefaultHandler extends AbstractHandler {
     private $isCli = null;
-    
+
     /**
      * Creates new instance of the class.
      */
     public function __construct() {
         parent::__construct();
         $this->setName('Default');
-        
+
         // Only auto-detect CLI if not already set
         if ($this->isCli === null) {
             $this->setIsCLI(http_response_code() === false);
         }
-    }
-    
-    public function isCLI(): bool {
-        return $this->isCli ?? false;
-    }
-    
-    public function setIsCLI(bool $bool): void {
-        $this->isCli = $bool;
     }
     /**
      * Handles the exception by outputting formatted error information.
@@ -63,49 +55,61 @@ class DefaultHandler extends AbstractHandler {
         $this->outputExceptionDetails();
         $this->outputStackTrace();
         $this->outputExceptionFooter();
-        
+
         // Log the exception securely
         $this->logException();
     }
-    
+
     /**
-     * Output the opening container (HTML or CLI format).
+     * Checks if the handler is active or not.
+     *
+     * @return bool The method will always return true.
      */
-    private function outputExceptionHeader(): void {
-        if ($this->isCLI()) {
-            // CLI format - use ANSI colors and plain text
-            $this->secureOutput("\n" . str_repeat('-', 60) . "\n");
-            $this->secureOutput("\033[1;31mApplication Error\033[0m\n");
-            $this->secureOutput(str_repeat('-', 60) . "\n");
-        } else {
-            // HTML format - ensure output is sent to browser
-            if (ob_get_level()) {
-                ob_end_flush();
-            }
-            
-            if ($this->getSecurityConfig()->allowInlineStyles()) {
-                $this->secureOutput('<div style="border: 1px solid #dc3545; background: #f8d7da; color: #721c24; padding: 15px; margin: 10px 0; border-radius: 4px; font-family: monospace;">');
-            } else {
-                $this->secureOutput('<div class="error-container">');
-            }
-            
-            $this->secureOutput('<h3 class="error-title">Application Error</h3>');
-        }
+    public function isActive(): bool {
+        return true;
     }
-    
+
+    public function isCLI(): bool {
+        return $this->isCli ?? false;
+    }
+
     /**
-     * Output the exception details (location and message) in CLI or HTML format.
+     * Checks if the handler will be executed as a shutdown handler.
+     *
+     * @return bool The method will always return false.
      */
-    private function outputExceptionDetails(): void {
-        if ($this->isCLI()) {
-            // CLI format
-            $this->outputCLIDetails();
-        } else {
-            // HTML format
-            $this->outputHTMLDetails();
-        }
+    public function isShutdownHandler(): bool {
+        return false;
     }
-    
+
+    public function setIsCLI(bool $bool): void {
+        $this->isCli = $bool;
+    }
+
+    /**
+     * Log the exception with context information.
+     */
+    private function logException(): void {
+        $context = [
+            'class' => $this->getClass(),
+            'line' => $this->getLine(),
+            'code' => $this->getCode(),
+            'environment' => $this->getSecurityConfig()->getSecurityLevel(),
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown',
+            'request_uri' => $_SERVER['REQUEST_URI'] ?? 'Unknown'
+        ];
+
+        // Add stack trace in development
+        if ($this->getSecurityConfig()->isDevelopment()) {
+            $context['trace'] = array_map(function($entry)
+            {
+                return (string)$entry;
+            }, $this->getTrace());
+        }
+
+        $this->secureLog('Exception handled by: '.$this->getName(), $context);
+    }
+
     /**
      * Output exception details in CLI format.
      */
@@ -120,9 +124,10 @@ class DefaultHandler extends AbstractHandler {
         } else {
             $this->secureOutput("\033[1mLocation:\033[0m Application Code\n");
         }
-        
+
         // Show message (automatically sanitized)
         $message = $this->getMessage();
+
         if (!empty($message) && $message !== 'No Message') {
             if ($this->isSecureEnvironment()) {
                 $this->secureOutput("\033[1mDetails:\033[0m An error occurred during processing.\n");
@@ -133,9 +138,10 @@ class DefaultHandler extends AbstractHandler {
                 ));
             }
         }
-        
+
         // Show error code if available
         $code = $this->getCode();
+
         if ($code !== '0') {
             $this->secureOutput(sprintf(
                 "\033[1mCode:\033[0m %s\n",
@@ -143,7 +149,92 @@ class DefaultHandler extends AbstractHandler {
             ));
         }
     }
-    
+
+    /**
+     * Output footer in CLI format.
+     */
+    private function outputCLIFooter(): void {
+        $this->secureOutput("\n");
+
+        // Add helpful information based on environment
+        if ($this->isSecureEnvironment()) {
+            $this->secureOutput("\033[2mIf this problem persists, please contact support with the error code above.\033[0m\n");
+        } else {
+            $this->secureOutput("\033[2mThis detailed error information is shown because you are in development mode.\033[0m\n");
+        }
+
+        // Add timestamp
+        $this->secureOutput(sprintf(
+            "\033[2mTime: %s\033[0m\n",
+            date('Y-m-d H:i:s')
+        ));
+
+        $this->secureOutput(str_repeat('-', 60)."\n");
+    }
+
+    /**
+     * Output stack trace in CLI format.
+     */
+    private function outputCLIStackTrace(array $trace): void {
+        $this->secureOutput("\n\033[1mStack Trace:\033[0m\n");
+        $this->secureOutput(str_repeat('-', 40)."\n");
+
+        foreach ($trace as $index => $entry) {
+            $this->secureOutput(sprintf("#%d %s\n", $index, (string)$entry));
+        }
+
+        $this->secureOutput(str_repeat('-', 40)."\n");
+    }
+
+    /**
+     * Output the exception details (location and message) in CLI or HTML format.
+     */
+    private function outputExceptionDetails(): void {
+        if ($this->isCLI()) {
+            // CLI format
+            $this->outputCLIDetails();
+        } else {
+            // HTML format
+            $this->outputHTMLDetails();
+        }
+    }
+
+    /**
+     * Output the closing container and additional information in CLI or HTML format.
+     */
+    private function outputExceptionFooter(): void {
+        if ($this->isCLI()) {
+            $this->outputCLIFooter();
+        } else {
+            $this->outputHTMLFooter();
+        }
+    }
+
+    /**
+     * Output the opening container (HTML or CLI format).
+     */
+    private function outputExceptionHeader(): void {
+        if ($this->isCLI()) {
+            // CLI format - use ANSI colors and plain text
+            $this->secureOutput("\n".str_repeat('-', 60)."\n");
+            $this->secureOutput("\033[1;31mApplication Error\033[0m\n");
+            $this->secureOutput(str_repeat('-', 60)."\n");
+        } else {
+            // HTML format - ensure output is sent to browser
+            if (ob_get_level()) {
+                ob_end_flush();
+            }
+
+            if ($this->getSecurityConfig()->allowInlineStyles()) {
+                $this->secureOutput('<div style="border: 1px solid #dc3545; background: #f8d7da; color: #721c24; padding: 15px; margin: 10px 0; border-radius: 4px; font-family: monospace;">');
+            } else {
+                $this->secureOutput('<div class="error-container">');
+            }
+
+            $this->secureOutput('<h3 class="error-title">Application Error</h3>');
+        }
+    }
+
     /**
      * Output exception details in HTML format.
      */
@@ -158,9 +249,10 @@ class DefaultHandler extends AbstractHandler {
         } else {
             $this->secureOutput('<p><strong>Location:</strong> Application code</p>');
         }
-        
+
         // Show message (automatically sanitized)
         $message = $this->getMessage();
+
         if (!empty($message) && $message !== 'No Message') {
             if ($this->isSecureEnvironment()) {
                 $this->secureOutput('<p><strong>Details:</strong> An error occurred during processing.</p>');
@@ -171,9 +263,10 @@ class DefaultHandler extends AbstractHandler {
                 ));
             }
         }
-        
+
         // Show error code if available
         $code = $this->getCode();
+
         if ($code !== '0') {
             $this->secureOutput(sprintf(
                 '<p><strong>Code:</strong> %s</p>',
@@ -181,104 +274,7 @@ class DefaultHandler extends AbstractHandler {
             ));
         }
     }
-    
-    /**
-     * Output the formatted stack trace in CLI or HTML format.
-     */
-    private function outputStackTrace(): void {
-        $trace = $this->getTrace();
-        
-        if (empty($trace)) {
-            if (!$this->isSecureEnvironment()) {
-                if ($this->isCLI()) {
-                    $this->secureOutput("\n\033[2mNo stack trace available\033[0m\n");
-                } else {
-                    $this->secureOutput('<p><em>No stack trace available</em></p>');
-                }
-            }
-            return;
-        }
-        
-        if ($this->isSecureEnvironment()) {
-            // In production, don't show stack trace
-            return;
-        }
-        
-        if ($this->isCLI()) {
-            $this->outputCLIStackTrace($trace);
-        } else {
-            $this->outputHTMLStackTrace($trace);
-        }
-    }
-    
-    /**
-     * Output stack trace in CLI format.
-     */
-    private function outputCLIStackTrace(array $trace): void {
-        $this->secureOutput("\n\033[1mStack Trace:\033[0m\n");
-        $this->secureOutput(str_repeat('-', 40) . "\n");
-        
-        foreach ($trace as $index => $entry) {
-            $this->secureOutput(sprintf("#%d %s\n", $index, (string)$entry));
-        }
-        
-        $this->secureOutput(str_repeat('-', 40) . "\n");
-    }
-    
-    /**
-     * Output stack trace in HTML format.
-     */
-    private function outputHTMLStackTrace(array $trace): void {
-        $this->secureOutput('<details class="error-trace">');
-        $this->secureOutput('<summary><strong>Stack Trace</strong></summary>');
-        
-        if ($this->getSecurityConfig()->allowInlineStyles()) {
-            $this->secureOutput('<pre style="background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto;">');
-        } else {
-            $this->secureOutput('<pre class="error-trace-content">');
-        }
-        
-        foreach ($trace as $index => $entry) {
-            $this->secureOutput(sprintf("#%d %s\n", $index, htmlspecialchars((string)$entry)));
-        }
-        
-        $this->secureOutput('</pre>');
-        $this->secureOutput('</details>');
-    }
-    
-    /**
-     * Output the closing container and additional information in CLI or HTML format.
-     */
-    private function outputExceptionFooter(): void {
-        if ($this->isCLI()) {
-            $this->outputCLIFooter();
-        } else {
-            $this->outputHTMLFooter();
-        }
-    }
-    
-    /**
-     * Output footer in CLI format.
-     */
-    private function outputCLIFooter(): void {
-        $this->secureOutput("\n");
-        
-        // Add helpful information based on environment
-        if ($this->isSecureEnvironment()) {
-            $this->secureOutput("\033[2mIf this problem persists, please contact support with the error code above.\033[0m\n");
-        } else {
-            $this->secureOutput("\033[2mThis detailed error information is shown because you are in development mode.\033[0m\n");
-        }
-        
-        // Add timestamp
-        $this->secureOutput(sprintf(
-            "\033[2mTime: %s\033[0m\n",
-            date('Y-m-d H:i:s')
-        ));
-        
-        $this->secureOutput(str_repeat('-', 60) . "\n");
-    }
-    
+
     /**
      * Output footer in HTML format.
      */
@@ -289,54 +285,64 @@ class DefaultHandler extends AbstractHandler {
         } else {
             $this->secureOutput('<p class="error-help">This detailed error information is shown because you are in development mode.</p>');
         }
-        
+
         // Add timestamp
         $this->secureOutput(sprintf(
             '<p class="error-timestamp">Time: %s</p>',
             date('Y-m-d H:i:s')
         ));
-        
+
         $this->secureOutput('</div>');
     }
-    
+
     /**
-     * Log the exception with context information.
+     * Output stack trace in HTML format.
      */
-    private function logException(): void {
-        $context = [
-            'class' => $this->getClass(),
-            'line' => $this->getLine(),
-            'code' => $this->getCode(),
-            'environment' => $this->getSecurityConfig()->getSecurityLevel(),
-            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown',
-            'request_uri' => $_SERVER['REQUEST_URI'] ?? 'Unknown'
-        ];
-        
-        // Add stack trace in development
-        if ($this->getSecurityConfig()->isDevelopment()) {
-            $context['trace'] = array_map(function($entry) {
-                return (string)$entry;
-            }, $this->getTrace());
+    private function outputHTMLStackTrace(array $trace): void {
+        $this->secureOutput('<details class="error-trace">');
+        $this->secureOutput('<summary><strong>Stack Trace</strong></summary>');
+
+        if ($this->getSecurityConfig()->allowInlineStyles()) {
+            $this->secureOutput('<pre style="background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto;">');
+        } else {
+            $this->secureOutput('<pre class="error-trace-content">');
         }
-        
-        $this->secureLog('Exception handled by: '.$this->getName(), $context);
+
+        foreach ($trace as $index => $entry) {
+            $this->secureOutput(sprintf("#%d %s\n", $index, htmlspecialchars((string)$entry)));
+        }
+
+        $this->secureOutput('</pre>');
+        $this->secureOutput('</details>');
     }
 
     /**
-     * Checks if the handler is active or not.
-     *
-     * @return bool The method will always return true.
+     * Output the formatted stack trace in CLI or HTML format.
      */
-    public function isActive(): bool {
-        return true;
-    }
+    private function outputStackTrace(): void {
+        $trace = $this->getTrace();
 
-    /**
-     * Checks if the handler will be executed as a shutdown handler.
-     *
-     * @return bool The method will always return false.
-     */
-    public function isShutdownHandler(): bool {
-        return false;
+        if (empty($trace)) {
+            if (!$this->isSecureEnvironment()) {
+                if ($this->isCLI()) {
+                    $this->secureOutput("\n\033[2mNo stack trace available\033[0m\n");
+                } else {
+                    $this->secureOutput('<p><em>No stack trace available</em></p>');
+                }
+            }
+
+            return;
+        }
+
+        if ($this->isSecureEnvironment()) {
+            // In production, don't show stack trace
+            return;
+        }
+
+        if ($this->isCLI()) {
+            $this->outputCLIStackTrace($trace);
+        } else {
+            $this->outputHTMLStackTrace($trace);
+        }
     }
 }

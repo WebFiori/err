@@ -11,12 +11,12 @@ use WebFiori\Error\TraceEntry;
 class StackTraceFilter {
     private SecurityConfig $config;
     private PathSanitizer $pathSanitizer;
-    
+
     public function __construct(SecurityConfig $config, PathSanitizer $pathSanitizer) {
         $this->config = $config;
         $this->pathSanitizer = $pathSanitizer;
     }
-    
+
     /**
      * Filter stack trace based on configuration.
      * Optimized for performance with deep call stacks.
@@ -25,61 +25,48 @@ class StackTraceFilter {
         if (!$this->config->shouldShowStackTrace()) {
             return [];
         }
-        
+
         $maxDepth = $this->config->getMaxTraceDepth();
+
         if ($maxDepth <= 0) {
             return [];
         }
-        
+
         $filtered = [];
         $count = 0;
-        
+
         // Process entries efficiently, stopping early when limits are reached
         foreach ($trace as $entry) {
             if ($count >= $maxDepth) {
                 break;
             }
-            
+
             if ($this->shouldIncludeTraceEntry($entry)) {
                 $filtered[] = $this->sanitizeTraceEntry($entry);
                 $count++;
             }
         }
-        
+
         return $filtered;
     }
-    
+
     /**
-     * Check if a trace entry should be included.
+     * Sanitize method names to hide sensitive methods.
      */
-    private function shouldIncludeTraceEntry(TraceEntry $entry): bool {
-        $file = $entry->getFile();
-        
-        // Skip vendor files in production
-        if ($this->config->isProduction() && str_contains($file, '/vendor/')) {
-            return false;
-        }
-        
-        // Skip other sensitive paths (but not vendor in dev/staging)
-        $nonVendorSensitivePaths = [
-            '/\/\.env/',
-            '/\/config\/database/',
-            '/\/\.git\//',
-            '/\/storage\//',
-            '/\/cache\//',
-            '/\/tmp\//',
-            '/\/temp\//',
-        ];
-        
-        foreach ($nonVendorSensitivePaths as $pattern) {
-            if (preg_match($pattern, $file)) {
-                return false;
+    private function sanitizeMethodName(string $methodName): string {
+        if ($this->config->isProduction()) {
+            $sensitiveMethods = ['password', 'auth', 'login', 'token', 'secret', 'credential'];
+
+            foreach ($sensitiveMethods as $sensitive) {
+                if (stripos($methodName, $sensitive) !== false) {
+                    return '[SENSITIVE_METHOD]';
+                }
             }
         }
-        
-        return true;
+
+        return $methodName;
     }
-    
+
     /**
      * Sanitize a trace entry.
      */
@@ -91,24 +78,38 @@ class StackTraceFilter {
             'class' => $this->pathSanitizer->sanitizeClassName($entry->getClass()),
             'function' => $this->sanitizeMethodName($entry->getMethod())
         ];
-        
+
         return new TraceEntry($sanitizedData);
     }
-    
+
     /**
-     * Sanitize method names to hide sensitive methods.
+     * Check if a trace entry should be included.
      */
-    private function sanitizeMethodName(string $methodName): string {
-        if ($this->config->isProduction()) {
-            $sensitiveMethods = ['password', 'auth', 'login', 'token', 'secret', 'credential'];
-            
-            foreach ($sensitiveMethods as $sensitive) {
-                if (stripos($methodName, $sensitive) !== false) {
-                    return '[SENSITIVE_METHOD]';
-                }
+    private function shouldIncludeTraceEntry(TraceEntry $entry): bool {
+        $file = $entry->getFile();
+
+        // Skip vendor files in production
+        if ($this->config->isProduction() && str_contains($file, '/vendor/')) {
+            return false;
+        }
+
+        // Skip other sensitive paths (but not vendor in dev/staging)
+        $nonVendorSensitivePaths = [
+            '/\/\.env/',
+            '/\/config\/database/',
+            '/\/\.git\//',
+            '/\/storage\//',
+            '/\/cache\//',
+            '/\/tmp\//',
+            '/\/temp\//',
+        ];
+
+        foreach ($nonVendorSensitivePaths as $pattern) {
+            if (preg_match($pattern, $file)) {
+                return false;
             }
         }
-        
-        return $methodName;
+
+        return true;
     }
 }

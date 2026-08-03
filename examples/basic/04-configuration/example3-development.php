@@ -1,16 +1,17 @@
 <?php
+
 /**
  * Example 3: Development Configuration
  */
 
-require_once __DIR__ . '/../../../vendor/autoload.php';
+require_once __DIR__.'/../../../vendor/autoload.php';
 
-use WebFiori\Error\Handler;
-use WebFiori\Error\DefaultHandler;
 use WebFiori\Error\Config\HandlerConfig;
+use WebFiori\Error\DefaultHandler;
+use WebFiori\Error\Handler;
 
 echo "Example 3: Development Configuration\n";
-echo str_repeat('-', 32) . "\n";
+echo str_repeat('-', 32)."\n";
 
 $developmentConfig = HandlerConfig::createDevelopmentConfig();
 Handler::setConfig($developmentConfig);

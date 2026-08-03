@@ -125,10 +125,6 @@ class Handler {
      */
     private static bool $isHandlingException = false;
     
-    /**
-     * @var array<string, WeakReference> Weak references to handlers to prevent memory leaks
-     */
-    private static array $handlerWeakRefs = [];
     
     /**
      * @var int Memory usage threshold for cleanup (in bytes)
@@ -766,10 +762,6 @@ class Handler {
             array_flip($activeHandlerNames)
         );
         
-        // Clean up weak references
-        self::$handlerWeakRefs = array_filter(self::$handlerWeakRefs, function($weakRef) {
-            return $weakRef->get() !== null;
-        });
         
         // Force garbage collection if memory usage is high
         if (memory_get_usage() > self::$memoryThreshold) {
@@ -788,7 +780,6 @@ class Handler {
             'peak_usage' => memory_get_peak_usage(true),
             'handler_count' => count(self::get()->handlersPool),
             'execution_counters' => count(self::$handlerExecutionCount),
-            'weak_references' => count(self::$handlerWeakRefs),
             'threshold' => self::$memoryThreshold
         ];
     }
@@ -817,7 +808,6 @@ class Handler {
             
             // Clean up static data
             self::$handlerExecutionCount = [];
-            self::$handlerWeakRefs = [];
             self::$isHandlingException = false;
             
             // Restore original PHP configuration

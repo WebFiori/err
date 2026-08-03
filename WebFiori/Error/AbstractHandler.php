@@ -519,6 +519,9 @@ abstract class AbstractHandler {
             return;
         }
 
+        // Reset trace to prevent duplication when setException() is called multiple times
+        $this->traceArr = [];
+
         if ($ex instanceof ErrorHandlerException) {
             $this->traceArr = $ex->getDebugTrace();
         } else {

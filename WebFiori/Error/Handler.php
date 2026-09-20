@@ -27,6 +27,12 @@ use WebFiori\Error\Security\SecurityConfig;
  */
 class Handler {
     /**
+     * Default maximum number of times a single handler may execute per request.
+     *
+     * Used as the initial value and the value restored by {@see reset()}.
+     */
+    const DEFAULT_MAX_HANDLER_EXECUTIONS = 3;
+    /**
      * An array which holds constants that define the meanings of different PHP errors.
      * 
      * This mapping is used when converting PHP errors to exceptions to provide
@@ -148,7 +154,7 @@ class Handler {
     /**
      * @var int Maximum number of times a handler can be executed in a single request
      */
-    private static int $maxHandlerExecutions = 3;
+    private static int $maxHandlerExecutions = self::DEFAULT_MAX_HANDLER_EXECUTIONS;
 
 
     /**
@@ -377,6 +383,7 @@ class Handler {
         // Reset infinite loop protection
         self::$handlerExecutionCount = [];
         self::$isHandlingException = false;
+        self::$maxHandlerExecutions = self::DEFAULT_MAX_HANDLER_EXECUTIONS;
 
         // Re-apply current configuration (don't reset it)
         if (self::$config !== null) {

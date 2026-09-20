@@ -3,16 +3,37 @@
 A comprehensive, secure, and production-ready PHP library for handling errors and exceptions with advanced security features, CLI/HTTP awareness, memory management, and enterprise-grade reliability.
 
 <p align="center">
-  <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php83.yaml">
-    <img src="https://github.com/WebFiori/err/actions/workflows/php83.yaml/badge.svg?branch=main">
+  <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php84.yaml">
+    <img src="https://github.com/WebFiori/err/actions/workflows/php84.yaml/badge.svg?branch=main" alt="Build Status">
   </a>
   <a href="https://sonarcloud.io/dashboard?id=WebFiori_err">
-      <img src="https://sonarcloud.io/api/project_badges/measure?project=WebFiori_err&metric=alert_status" />
+      <img src="https://sonarcloud.io/api/project_badges/measure?project=WebFiori_err&metric=alert_status" alt="Quality Gate Status" />
+  </a>
+  <a href="https://github.com/WebFiori/err/releases">
+      <img src="https://img.shields.io/github/release/WebFiori/err.svg?label=latest" alt="Latest Release" />
   </a>
   <a href="https://packagist.org/packages/webfiori/err">
-    <img src="https://img.shields.io/packagist/dt/webfiori/err?color=light-green">
+    <img src="https://img.shields.io/packagist/dt/webfiori/err?color=light-green" alt="Total Downloads">
   </a>
 </p>
+
+## Table of Contents
+
+- [Supported PHP Versions](#supported-php-versions)
+- [Features](#features)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Detailed Usage Guide](#detailed-usage-guide)
+- [Advanced Examples](#advanced-examples)
+- [Testing](#testing)
+- [Examples](#examples)
+- [Configuration Reference](#configuration-reference)
+- [Best Practices](#best-practices)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
+- [Support](#support)
+- [Changelog](#changelog)
 
 ## Supported PHP Versions
 
@@ -22,6 +43,7 @@ A comprehensive, secure, and production-ready PHP library for handling errors an
 | <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php82.yaml"><img src="https://github.com/WebFiori/err/actions/workflows/php82.yaml/badge.svg?branch=main"></a>  |
 | <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php83.yaml"><img src="https://github.com/WebFiori/err/actions/workflows/php83.yaml/badge.svg?branch=main"></a>  |
 | <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php84.yaml"><img src="https://github.com/WebFiori/err/actions/workflows/php84.yaml/badge.svg?branch=main"></a>  |
+| <a target="_blank" href="https://github.com/WebFiori/err/actions/workflows/php85.yaml"><img src="https://github.com/WebFiori/err/actions/workflows/php85.yaml/badge.svg?branch=main"></a>  |
 
 ## Features
 
@@ -32,7 +54,7 @@ A comprehensive, secure, and production-ready PHP library for handling errors an
 * **🎯 Flexible Handler System**: Object-oriented abstraction with priority-based handler registration
 * **🌍 Environment-Aware**: Automatic environment detection with development and production presets
 * **🔧 Null Safety**: Robust null handling prevents TypeErrors in edge cases
-* **📊 Comprehensive Testing**: 92 tests with 100% pass rate ensuring reliability
+* **📊 Comprehensive Testing**: Extensive test suite with 100% pass rate ensuring reliability
 
 ## Installation
 
@@ -174,13 +196,12 @@ class SecureHandler extends AbstractHandler {
 use WebFiori\Error\Security\SecurityConfig;
 
 // Create security config for different environments
-$devConfig = new SecurityConfig('development');   // Shows full details
-$prodConfig = new SecurityConfig('production');   // Minimal safe output
-$stagingConfig = new SecurityConfig('staging');   // Balanced approach
+$devConfig = new SecurityConfig(SecurityConfig::LEVEL_DEV);       // Shows full details
+$prodConfig = new SecurityConfig(SecurityConfig::LEVEL_PROD);     // Minimal safe output
+$stagingConfig = new SecurityConfig(SecurityConfig::LEVEL_STAGING); // Balanced approach
 
-// Custom security settings
-$customConfig = new SecurityConfig('custom');
-// Note: SecurityConfig uses internal methods for configuration
+// With no argument, the level is auto-detected from the environment
+$autoConfig = new SecurityConfig();
 ```
 
 ### Memory Management
@@ -333,7 +354,7 @@ class ProductionHandler extends AbstractHandler {
     }
 
     public function createSecurityConfig(): SecurityConfig {
-        return new SecurityConfig('production');
+        return new SecurityConfig(SecurityConfig::LEVEL_PROD);
     }
 
     public function handle(): void {
@@ -380,7 +401,7 @@ class DevelopmentHandler extends AbstractHandler {
     }
 
     public function createSecurityConfig(): SecurityConfig {
-        return new SecurityConfig('development');
+        return new SecurityConfig(SecurityConfig::LEVEL_DEV);
     }
 
     public function handle(): void {
@@ -447,7 +468,7 @@ class DevelopmentHandler extends AbstractHandler {
 
 ## Testing
 
-The library includes a comprehensive test suite with 92 tests covering all functionality:
+The library includes a comprehensive test suite covering all functionality:
 
 ```bash
 # Run all tests
@@ -456,6 +477,17 @@ composer test
 # View test results with detailed output
 vendor/bin/phpunit -c tests/phpunit.xml --testdox
 ```
+
+## Examples
+
+Runnable examples live in the [`examples/`](examples) directory, organized by topic:
+
+- [`examples/basic`](examples/basic) — getting started with handlers
+- [`examples/advanced`](examples/advanced) — priorities, shutdown handlers, and custom output
+- [`examples/security`](examples/security) — sanitization and environment-aware configuration
+- [`examples/integrations`](examples/integrations) — integrating with other systems, including
+  [database logging](examples/integrations/01-database-logging) and a
+  [log callback](examples/integrations/02-log-callback)
 
 ## Configuration Reference
 
@@ -484,7 +516,7 @@ $config->apply();
 ```php
 use WebFiori\Error\Security\SecurityConfig;
 
-$security = new SecurityConfig('production');
+$security = new SecurityConfig(SecurityConfig::LEVEL_PROD);
 
 // Control what information is shown
 $security->shouldShowStackTrace(); // Returns bool
@@ -546,18 +578,28 @@ class SecureHandler extends AbstractHandler {
     public function handle(): void {
         // Use built-in sanitization
         $sanitizedMessage = $this->getMessage(); // Already sanitized
-        
-        // Log security violations
+
+        // Log sensitive errors via the sanitizing, callback-aware logger
         if ($this->isSensitiveError()) {
-            $this->logSecurityViolation('Sensitive error detected');
+            $this->secureLog('Sensitive error detected', [
+                'class' => $this->getClass(),
+            ]);
         }
-        
+
         // Show generic message in production
         if ($this->createSecurityConfig()->isProduction()) {
             echo 'An error occurred. Please contact support.';
         }
     }
-    
+
+    public function isActive(): bool {
+        return true;
+    }
+
+    public function isShutdownHandler(): bool {
+        return false;
+    }
+
     private function isSensitiveError(): bool {
         // Your security detection logic
         return false;
@@ -596,3 +638,7 @@ Contributions are welcome! Please read our contributing guidelines and submit pu
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/WebFiori/err/issues)
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a full history of changes and releases.

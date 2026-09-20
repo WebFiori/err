@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.1.0](https://github.com/WebFiori/err/compare/v2.0.3...v2.1.0) (2026-09-20)
+
+
+### Features
+
+* **logging:** add pluggable log callback (no PSR-3 dependency) ([ebfdcf4](https://github.com/WebFiori/err/commit/ebfdcf41e79c7f7b49bd1ecaa840ceecdd0a8b76))
+* **logging:** add pluggable log callback (no PSR-3 dependency) ([8dad5fa](https://github.com/WebFiori/err/commit/8dad5fa6bbcacdab90f3d876cb0ca204314819d0)), closes [#13](https://github.com/WebFiori/err/issues/13)
+
+
+### Bug Fixes
+
+* **handler:** production trace building, dead code removal, and trace duplication ([b4d2195](https://github.com/WebFiori/err/commit/b4d21950088287084fc5eb07fda3a1df6fb77f6d))
+* **handler:** reset max handler executions in Handler::reset() ([ad84792](https://github.com/WebFiori/err/commit/ad84792cadf52103046df145d0b9595e9823c279)), closes [#28](https://github.com/WebFiori/err/issues/28)
+* **handler:** use $this-&gt;exception directly in setTrace() to fix production trace building ([382220b](https://github.com/WebFiori/err/commit/382220bc1921355c2e1e673a36f8ce50c8226822)), closes [#17](https://github.com/WebFiori/err/issues/17)
+* **memory:** remove unused handlerWeakRefs dead code ([262f67e](https://github.com/WebFiori/err/commit/262f67e1425f642414b7c37547c4c5150d50602b)), closes [#16](https://github.com/WebFiori/err/issues/16)
+* **trace:** reset traceArr in setTrace() to prevent duplication ([dec949f](https://github.com/WebFiori/err/commit/dec949fb8f739ae5fca60b4d4b80c4ee415b1f02)), closes [#15](https://github.com/WebFiori/err/issues/15)
+
+
+### Miscellaneous Chores
+
+* normalize line endings to LF ([5064134](https://github.com/WebFiori/err/commit/506413426200db5ea868aa5e0b49147aabd1f264))
+
 ## [2.0.3](https://github.com/WebFiori/err/compare/v2.0.2...v2.0.3) (2026-06-14)
 
 

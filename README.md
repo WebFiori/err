@@ -225,32 +225,55 @@ Handler::setMaxHandlerExecutions(3); // Max 3 handler executions per request
 
 ### Logging Integration
 
-The library integrates with PHP's error logging system:
+By default the library logs via PHP's native `error_log()`. You can route logs
+anywhere — a file, syslog, a service, or an existing PSR-3 logger — by
+supplying a **callback**, with **no external logging dependency** (see
+[ADR-0031](https://github.com/WebFiori/docs/blob/main/adr/0031-ai-logging-via-callback.md)).
+
+The callback signature is `fn(string $level, string $message, array $context): void`
+with levels `debug`, `info`, `warning`, `error`.
+
+```php
+use WebFiori\Error\Handler;
+
+// Global callback — used by every handler and the library's internal diagnostics.
+Handler::setDefaultLogCallback(function (string $level, string $message, array $context): void {
+    // Route to your sink of choice.
+});
+
+// Or bridge to a PSR-3 logger (Monolog, etc.) in one line:
+Handler::setDefaultLogCallback([$psrLogger, 'log']);
+```
+
+Inside a handler, `secureLog()` sanitizes and routes through the callback
+(falling back to `error_log()` when none is set). A per-handler callback can
+override the global one via `$handler->setLogCallback(...)`.
 
 ```php
 use WebFiori\Error\AbstractHandler;
 
 class LoggingHandler extends AbstractHandler {
     public function handle(): void {
-        // Secure logging with automatic sanitization
+        // Secure logging with automatic sanitization, routed through the callback.
         $this->secureLog('Exception occurred', [
             'class' => $this->getClass(),
             'line' => $this->getLine(),
             'code' => $this->getCode()
         ]);
-        
-        // Log security violations
-        if ($this->detectSecurityIssue()) {
-            $this->logSecurityViolation('Suspicious exception pattern detected');
-        }
     }
-    
-    private function detectSecurityIssue(): bool {
-        // Your security detection logic
+
+    public function isActive(): bool {
+        return true;
+    }
+
+    public function isShutdownHandler(): bool {
         return false;
     }
 }
 ```
+
+See [`examples/integrations/02-log-callback`](examples/integrations/02-log-callback)
+for a runnable example.
 
 ### CLI vs HTTP Output Examples
 

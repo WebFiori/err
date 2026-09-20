@@ -2,6 +2,7 @@
 namespace WebFiori\Error\Security;
 
 use WebFiori\Error\AbstractHandler;
+use WebFiori\Error\Handler;
 
 /**
  * Monitors security violations and handler execution.
@@ -94,6 +95,12 @@ class SecurityMonitor {
             'request_uri' => $_SERVER['REQUEST_URI'] ?? 'Unknown'
         ];
 
-        error_log('WebFiori Security Violation: '.json_encode($logEntry));
+        $callback = Handler::getDefaultLogCallback();
+
+        if ($callback !== null) {
+            $callback('warning', 'WebFiori Security Violation', $logEntry);
+        } else {
+            error_log('WebFiori Security Violation: '.json_encode($logEntry));
+        }
     }
 }

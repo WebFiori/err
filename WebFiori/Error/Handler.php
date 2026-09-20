@@ -112,6 +112,15 @@ class Handler {
     private static ?HandlerConfig $config = null;
 
     /**
+     * Global default logging callback shared by all handlers.
+     *
+     * Signature: fn(string $level, string $message, array $context): void
+     *
+     * @var callable|null
+     */
+    private static $defaultLogCallback = null;
+
+    /**
      * @var callable
      */
     private $errToExceptionHandler;
@@ -254,6 +263,15 @@ class Handler {
         }
 
         return self::$config;
+    }
+
+    /**
+     * Returns the global default logging callback, if any.
+     *
+     * @return callable|null The callback, or null if not configured.
+     */
+    public static function getDefaultLogCallback(): ?callable {
+        return self::$defaultLogCallback;
     }
 
     /**
@@ -439,6 +457,26 @@ class Handler {
             // Propagate config to existing handlers
             self::updateHandlerConfigs();
         }
+    }
+
+    /**
+     * Sets the global default logging callback shared by all handlers.
+     *
+     * The callback receives three arguments: the level ('debug', 'info',
+     * 'warning', 'error'), the message, and a structured context array. It is
+     * used by any handler that does not have its own callback set, and by the
+     * library's internal logging. When null (the default), logging falls back
+     * to PHP's native error_log().
+     *
+     * PSR-3 users can bridge in one line:
+     * ```php
+     * Handler::setDefaultLogCallback([$psrLogger, 'log']);
+     * ```
+     *
+     * @param callable|null $callback The logging callback, or null to disable.
+     */
+    public static function setDefaultLogCallback(?callable $callback): void {
+        self::$defaultLogCallback = $callback;
     }
 
     /**
@@ -703,7 +741,7 @@ class Handler {
 
         // Check for infinite loop protection
         if (self::$isHandlingException) {
-            error_log("Handler execution blocked: Already handling an exception to prevent infinite loop");
+            self::logInternal('warning', 'Handler execution blocked: Already handling an exception to prevent infinite loop');
 
             return;
         }
@@ -714,7 +752,7 @@ class Handler {
         }
 
         if (self::$handlerExecutionCount[$handlerName] >= self::$maxHandlerExecutions) {
-            error_log("Handler '{$handlerName}' execution blocked: Maximum execution limit (".self::$maxHandlerExecutions.") reached");
+            self::logInternal('warning', "Handler '{$handlerName}' execution blocked: Maximum execution limit (".self::$maxHandlerExecutions.') reached');
 
             return;
         }
@@ -797,16 +835,41 @@ class Handler {
      * @param Throwable $exception The exception that caused the failure
      */
     private function logHandlerFailure(AbstractHandler $handler, Throwable $exception): void {
-        // Use basic error_log to avoid triggering another handler
-        $logMessage = sprintf(
+        // Route through the internal logger (global callback or error_log
+        // fallback). This does not go through a handler, so it cannot trigger
+        // another handler execution.
+        self::logInternal('error', sprintf(
             'Handler "%s" failed: %s in %s:%d',
             $handler->getName(),
             $exception->getMessage(),
             $exception->getFile(),
             $exception->getLine()
-        );
+        ), [
+            'handler' => $handler->getName(),
+            'exception' => get_class($exception),
+        ]);
+    }
 
-        error_log($logMessage);
+    /**
+     * Emits a library-internal log message via the global callback, falling
+     * back to error_log() when no callback is configured.
+     *
+     * @param string $level The log level ('debug', 'info', 'warning', 'error').
+     * @param string $message The log message.
+     * @param array<string, mixed> $context Structured context data.
+     */
+    private static function logInternal(string $level, string $message, array $context = []): void {
+        if (self::$defaultLogCallback !== null) {
+            (self::$defaultLogCallback)($level, $message, $context);
+
+            return;
+        }
+
+        if (!empty($context)) {
+            error_log('['.$level.'] '.$message.' '.json_encode($context));
+        } else {
+            error_log('['.$level.'] '.$message);
+        }
     }
 
     /**

@@ -340,6 +340,18 @@ abstract class AbstractHandler {
         $sanitizedMessage = $this->outputSanitizer->sanitizeMessage($message);
         $sanitizedContext = $this->outputSanitizer->sanitizeContext($context);
 
+        // Prefer a configured callback (instance or global) so applications can
+        // route error-handler logs anywhere. Falls back to error_log() below.
+        $callback = $this->getLogCallback() ?? Handler::getDefaultLogCallback();
+
+        if ($callback !== null) {
+            $callback('error', $sanitizedMessage, array_merge($sanitizedContext, [
+                'handler' => $this->getName(),
+            ]));
+
+            return;
+        }
+
         $logData = json_encode([
             'message' => $sanitizedMessage,
             'context' => $sanitizedContext,
@@ -541,6 +553,7 @@ abstract class AbstractHandler {
     protected function isSecureEnvironment(): bool {
         return $this->security->isProduction();
     }
+    use LoggerTrait;
 
     /**
      * Output method that all handlers should use.

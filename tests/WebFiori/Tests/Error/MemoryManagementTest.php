@@ -140,14 +140,12 @@ class MemoryManagementTest extends TestCase {
         $this->assertArrayHasKey('peak_usage', $stats);
         $this->assertArrayHasKey('handler_count', $stats);
         $this->assertArrayHasKey('execution_counters', $stats);
-        $this->assertArrayHasKey('weak_references', $stats);
         $this->assertArrayHasKey('threshold', $stats);
         
         $this->assertIsInt($stats['current_usage']);
         $this->assertIsInt($stats['peak_usage']);
         $this->assertIsInt($stats['handler_count']);
         $this->assertIsInt($stats['execution_counters']);
-        $this->assertIsInt($stats['weak_references']);
         $this->assertIsInt($stats['threshold']);
     }
     

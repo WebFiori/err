@@ -24,16 +24,30 @@ class HandlerTest extends TestCase {
      */
     public function test00() {
         $this->expectException(ErrorHandlerException::class);
+
+        // Match the meaningful parts of the message without pinning the exact
+        // source line number (which shifts as the test file changes) or the
+        // exact warning wording (which varies across PHP versions).
         if (PHP_MAJOR_VERSION == 7) {
-            $msg = 'Run-time notice: Undefined variable: y at HandlerTest Line 36';
+            $pattern = '/Undefined variable: y at HandlerTest Line \d+/';
         } else {
-            $msg = 'An exception caused by an error. Run-time warning: Undefined variable $y at HandlerTest Line 36';
+            $pattern = '/An exception caused by an error\. Run-time warning: Undefined variable \$y at HandlerTest Line \d+/';
         }
-        $this->expectExceptionMessage($msg);
+        $this->expectExceptionMessageMatches($pattern);
         $h = Handler::get();
-        // Ensure error handler is active
+        // Ensure the handler is active and E_WARNING is reportable so the
+        // undefined-variable warning is converted deterministically (PHPUnit
+        // may restrict error_reporting during test execution). Restore the
+        // previous reporting level afterwards to avoid leaking global state
+        // into subsequent tests.
         $h->reset();
-        $x = $y;
+        $previousReporting = error_reporting(E_ALL);
+
+        try {
+            $x = $y;
+        } finally {
+            error_reporting($previousReporting);
+        }
     }
     /**
      * @test
@@ -148,7 +162,10 @@ class HandlerTest extends TestCase {
             Handler::get()->invokeExceptionsHandler(new \Exception("Test Exc", 33));
         });
         $this->assertStringContainsString('Application Error', $output); // CLI format uses title case
-        $this->assertStringContainsString('HandlerTest line 148', $output);
+        // Assert a trace frame pointing at this test class is present, without
+        // pinning the exact source line (which shifts with test-file edits and
+        // call-stack ordering across PHP versions).
+        $this->assertMatchesRegularExpression('/HandlerTest line \d+/', $output);
         $this->assertStringContainsString('Test Exc', $output);
     }
 }

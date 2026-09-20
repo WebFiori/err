@@ -1,16 +1,17 @@
 <?php
+
 /**
  * Example 2: Production Configuration
  */
 
-require_once __DIR__ . '/../../../vendor/autoload.php';
+require_once __DIR__.'/../../../vendor/autoload.php';
 
-use WebFiori\Error\Handler;
-use WebFiori\Error\DefaultHandler;
 use WebFiori\Error\Config\HandlerConfig;
+use WebFiori\Error\DefaultHandler;
+use WebFiori\Error\Handler;
 
 echo "Example 2: Production Configuration\n";
-echo str_repeat('-', 30) . "\n";
+echo str_repeat('-', 30)."\n";
 
 $productionConfig = HandlerConfig::createProductionConfig();
 Handler::setConfig($productionConfig);

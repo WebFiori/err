@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Simple Usage Example
  * 
@@ -6,14 +7,14 @@
  * The library automatically registers itself and handles errors.
  */
 
-require_once __DIR__ . '/../../../vendor/autoload.php';
+require_once __DIR__.'/../../../vendor/autoload.php';
 
-use WebFiori\Error\Handler;
-use WebFiori\Error\DefaultHandler;
 use WebFiori\Error\Config\HandlerConfig;
+use WebFiori\Error\DefaultHandler;
+use WebFiori\Error\Handler;
 
 echo "WebFiori Error Handler - Simple Usage Example\n";
-echo str_repeat('=', 50) . "\n\n";
+echo str_repeat('=', 50)."\n\n";
 
 // The handler system starts automatically when first accessed
 // Register the default handler with development security level
@@ -28,4 +29,3 @@ echo "Now triggering an exception to see the handler in action...\n\n";
 
 
 throw new Exception('This is a sample exception to demonstrate error handling');
-

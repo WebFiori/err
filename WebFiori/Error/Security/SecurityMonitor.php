@@ -10,29 +10,27 @@ use WebFiori\Error\AbstractHandler;
  */
 class SecurityMonitor {
     private SecurityConfig $config;
-    private array $violations = [];
     private array $handlerExecutions = [];
-    
+    private array $violations = [];
+
     public function __construct(SecurityConfig $config) {
         $this->config = $config;
     }
-    
+
     /**
-     * Record a security violation.
+     * Get handler execution statistics.
      */
-    public function recordSecurityViolation(string $violation, AbstractHandler $handler): void {
-        $this->violations[] = [
-            'violation' => $violation,
-            'handler' => $handler->getName(),
-            'timestamp' => time(),
-            'trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5)
-        ];
-        
-        if ($this->config->get('log_security_violations', true)) {
-            $this->logSecurityViolation($violation, $handler);
-        }
+    public function getExecutionStats(): array {
+        return $this->handlerExecutions;
     }
-    
+
+    /**
+     * Get all recorded violations.
+     */
+    public function getViolations(): array {
+        return $this->violations;
+    }
+
     /**
      * Record handler execution for monitoring.
      */
@@ -43,21 +41,45 @@ class SecurityMonitor {
             'memory_usage' => memory_get_usage(true)
         ];
     }
-    
+
     /**
-     * Get all recorded violations.
+     * Record a security violation.
      */
-    public function getViolations(): array {
-        return $this->violations;
+    public function recordSecurityViolation(string $violation, AbstractHandler $handler): void {
+        $this->violations[] = [
+            'violation' => $violation,
+            'handler' => $handler->getName(),
+            'timestamp' => time(),
+            'trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5)
+        ];
+
+        if ($this->config->get('log_security_violations', true)) {
+            $this->logSecurityViolation($violation, $handler);
+        }
     }
-    
+
     /**
-     * Get handler execution statistics.
+     * Get client IP address safely.
      */
-    public function getExecutionStats(): array {
-        return $this->handlerExecutions;
+    private function getClientIp(): string {
+        $ipKeys = ['HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'HTTP_CLIENT_IP', 'REMOTE_ADDR'];
+
+        foreach ($ipKeys as $key) {
+            if (!empty($_SERVER[$key])) {
+                $ip = $_SERVER[$key];
+
+                // Take first IP if comma-separated
+                if (str_contains($ip, ',')) {
+                    $ip = trim(explode(',', $ip)[0]);
+                }
+
+                return $ip;
+            }
+        }
+
+        return 'Unknown';
     }
-    
+
     /**
      * Log security violation to error log.
      */
@@ -71,27 +93,7 @@ class SecurityMonitor {
             'ip' => $this->getClientIp(),
             'request_uri' => $_SERVER['REQUEST_URI'] ?? 'Unknown'
         ];
-        
-        error_log('WebFiori Security Violation: ' . json_encode($logEntry));
-    }
-    
-    /**
-     * Get client IP address safely.
-     */
-    private function getClientIp(): string {
-        $ipKeys = ['HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'HTTP_CLIENT_IP', 'REMOTE_ADDR'];
-        
-        foreach ($ipKeys as $key) {
-            if (!empty($_SERVER[$key])) {
-                $ip = $_SERVER[$key];
-                // Take first IP if comma-separated
-                if (str_contains($ip, ',')) {
-                    $ip = trim(explode(',', $ip)[0]);
-                }
-                return $ip;
-            }
-        }
-        
-        return 'Unknown';
+
+        error_log('WebFiori Security Violation: '.json_encode($logEntry));
     }
 }

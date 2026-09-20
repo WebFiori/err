@@ -1,15 +1,16 @@
 <?php
+
 /**
  * CLI vs HTTP Output Example
  * 
  * This example shows how the handler adapts output based on execution context.
  */
 
-require_once __DIR__ . '/../../../vendor/autoload.php';
+require_once __DIR__.'/../../../vendor/autoload.php';
 
-use WebFiori\Error\Handler;
-use WebFiori\Error\DefaultHandler;
 use WebFiori\Error\Config\HandlerConfig;
+use WebFiori\Error\DefaultHandler;
+use WebFiori\Error\Handler;
 
 // Set environment to development to avoid security violations
 Handler::setConfig(HandlerConfig::createDevelopmentConfig());
@@ -19,7 +20,7 @@ $isCLI = http_response_code() === false;
 
 if ($isCLI) {
     echo "WebFiori Error Handler - CLI vs HTTP Example\n";
-    echo str_repeat('=', 50) . "\n\n";
+    echo str_repeat('=', 50)."\n\n";
     echo "Running in CLI mode - you'll see terminal-formatted output\n\n";
 } else {
     echo "<!DOCTYPE html>\n";

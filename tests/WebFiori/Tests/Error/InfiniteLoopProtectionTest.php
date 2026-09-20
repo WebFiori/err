@@ -229,6 +229,56 @@ class InfiniteLoopProtectionTest extends TestCase {
         $this->assertEquals(5, $executionCount);
         $this->assertEquals(5, Handler::getHandlerExecutionCount('ConfigTestHandler'));
     }
+
+    /**
+     * Test that reset() restores the max-executions limit to its default.
+     *
+     * Regression test for the leak where setMaxHandlerExecutions() persisted
+     * across reset(), altering infinite-loop protection for subsequent
+     * requests. See #28.
+     *
+     * @test
+     */
+    public function testResetRestoresMaxExecutionsDefault(): void {
+        // Raise the limit, then reset — the default must be restored.
+        Handler::setMaxHandlerExecutions(9);
+        Handler::reset();
+
+        $executionCount = 0;
+        $handler = new class($executionCount) extends AbstractHandler {
+            private $executionCount;
+
+            public function __construct(&$executionCount) {
+                parent::__construct();
+                $this->setName('ResetDefaultHandler');
+                $this->executionCount = &$executionCount;
+            }
+
+            public function handle(): void {
+                $this->executionCount++;
+            }
+
+            public function isActive(): bool {
+                return true;
+            }
+
+            public function isShutdownHandler(): bool {
+                return false;
+            }
+        };
+
+        Handler::registerHandler($handler);
+
+        $this->captureOutput(function() {
+            for ($i = 0; $i < 5; $i++) {
+                Handler::get()->invokeExceptionsHandler(new Exception('Test exception '.$i));
+            }
+        });
+
+        // Back at the default limit (DEFAULT_MAX_HANDLER_EXECUTIONS = 3).
+        $this->assertEquals(Handler::DEFAULT_MAX_HANDLER_EXECUTIONS, $executionCount);
+        $this->assertEquals(3, Handler::getHandlerExecutionCount('ResetDefaultHandler'));
+    }
     
     /**
      * Test recursive handler protection.

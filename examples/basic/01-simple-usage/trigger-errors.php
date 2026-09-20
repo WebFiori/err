@@ -1,15 +1,16 @@
 <?php
+
 /**
  * Error Triggering Script
  * 
  * This script demonstrates different types of errors that can be handled.
  */
 
-require_once __DIR__ . '/../../../vendor/autoload.php';
+require_once __DIR__.'/../../../vendor/autoload.php';
 
-use WebFiori\Error\Handler;
-use WebFiori\Error\DefaultHandler;
 use WebFiori\Error\Config\HandlerConfig;
+use WebFiori\Error\DefaultHandler;
+use WebFiori\Error\Handler;
 
 // Register the default handler
 Handler::registerHandler(new DefaultHandler());
@@ -27,7 +28,7 @@ try {
     Handler::invokeExceptionsHandler($e);
 }
 
-echo "\n" . str_repeat('-', 40) . "\n\n";
+echo "\n".str_repeat('-', 40)."\n\n";
 
 // 2. Runtime Error
 echo "2. Triggering Runtime Error:\n";
@@ -37,7 +38,7 @@ try {
     Handler::invokeExceptionsHandler($e);
 }
 
-echo "\n" . str_repeat('-', 40) . "\n\n";
+echo "\n".str_repeat('-', 40)."\n\n";
 
 // 3. Invalid Argument Exception
 echo "3. Triggering Invalid Argument Exception:\n";

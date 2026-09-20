@@ -1,16 +1,17 @@
 <?php
+
 /**
  * Example 4: Custom Configuration
  */
 
-require_once __DIR__ . '/../../../vendor/autoload.php';
+require_once __DIR__.'/../../../vendor/autoload.php';
 
-use WebFiori\Error\Handler;
-use WebFiori\Error\DefaultHandler;
 use WebFiori\Error\Config\HandlerConfig;
+use WebFiori\Error\DefaultHandler;
+use WebFiori\Error\Handler;
 
 echo "Example 4: Custom Configuration\n";
-echo str_repeat('-', 25) . "\n";
+echo str_repeat('-', 25)."\n";
 
 $customConfig = new HandlerConfig();
 $customConfig->setErrorReporting(E_ERROR | E_WARNING | E_PARSE);

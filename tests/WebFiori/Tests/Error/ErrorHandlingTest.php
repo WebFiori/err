@@ -233,9 +233,21 @@ class ErrorHandlingTest extends TestCase {
     public function testErrorToExceptionConversion(): void {
         $this->expectException(ErrorHandlerException::class);
         $this->expectExceptionMessageMatches('/An exception caused by an error/');
-        
-        // Trigger an undefined variable error
-        $undefinedVariable = $nonExistentVariable;
+
+        // Ensure the library's error-to-exception handler is active and that
+        // E_WARNING is reportable. PHPUnit installs its own handler and may
+        // restrict error_reporting() (excluding E_WARNING) during test
+        // execution, which would otherwise make this conversion order- and
+        // PHP-version-dependent.
+        Handler::reset();
+        $previousReporting = error_reporting(E_ALL);
+
+        try {
+            // Trigger an undefined variable error (E_WARNING on PHP 8+).
+            $undefinedVariable = $nonExistentVariable;
+        } finally {
+            error_reporting($previousReporting);
+        }
     }
     
     /**
